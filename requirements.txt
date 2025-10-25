@@ -7,6 +7,6 @@ httpx
 PyPDF2
 python-docx
 beautifulsoup4
-emergent-integrations
+emergentintegrations
 gunicorn
 python-multipart
