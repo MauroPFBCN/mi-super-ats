@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS Babel - Subir CV</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            display: grid; 
+            place-items: center; 
+            min-height: 90vh; 
+            background-color: #f4f7f6;
+            margin: 0;
+        }
+        #app {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            width: 90%;
+            max-width: 500px;
+        }
+        h1 { color: #333; }
+        input[type="file"] {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007aff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #c0c0c0; }
+        #resultado {
+            background: #eee;
+            padding: 1rem;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none; /* Oculto al inicio */
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Subir nuevo CV</h1>
+        <p>Selecciona un archivo .pdf o .docx para procesar.</p>
+        
+        <input type="file" id="cv-file" accept=".pdf,.doc,.docx">
+        
+        <button id="submit-btn">Procesar CV</button>
+
+        <pre id="resultado"></pre>
+    </div>
+
+    <script>
+        // --- IMPORTANTE: CONFIGURACIÓN ---
+        // Pega la URL de tu "motor" (Render) aquí
+        const API_URL = "URL_DEL_BACKEND_IRA_AQUI"; 
+        // ----------------------------------
+
+        const fileInput = document.getElementById('cv-file');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultadoBox = document.getElementById('resultado');
+
+        submitBtn.addEventListener('click', async () => {
+            if (API_URL === "URL_DEL_BACKEND_IRA_AQUI") {
+                alert("Error: La URL del backend no está configurada en el archivo index.html. Sigue la Fase 5 del tutorial.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Por favor, selecciona un archivo primero.");
+                return;
+            }
+
+            // Mostrar estado de carga
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Procesando...";
+            resultadoBox.style.display = 'block';
+            resultadoBox.textContent = "Subiendo y analizando el CV... Esto puede tardar hasta un minuto.";
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // 1. Subir el archivo y obtener la vista previa
+                const response = await fetch(`${API_URL}/api/candidates/upload-cv`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Error al subir el archivo.');
+                }
+
+                const previewData = await response.json();
+                resultadoBox.textContent = "Vista previa recibida. Confirmando candidato...";
+
+                // 2. Confirmar el candidato (aquí puedes añadir un paso de confirmación,
+                // pero para esta demo, lo confirmamos automáticamente)
+                const confirmResponse = await fetch(`${API_URL}/api/candidates/confirm-create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        candidate_data: previewData.candidate_data,
+                        file_info: previewData.file_info
+                    })
+                });
+
+                if (!confirmResponse.ok) {
+                    const errorData = await confirmResponse.json();
+                    throw new Error(errorData.detail || 'Error al confirmar el candidato.');
+                }
+
+                const finalCandidate = await confirmResponse.json();
+                
+                // ¡Éxito!
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Procesar CV";
+                resultadoBox.textContent = "¡Candidato creado con éxito!\n\n" +
+                    `Nombre: ${finalCandidate.nombre_apellido}\n` +
+                    `Email: ${finalCandidate.email}\n` +
+                    `Notion URL: ${finalCandidate.notion_url}`;
+
+            } catch (error) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Procesar CV";
+                resultadoBox.style.display = 'block';
+                resultadoBox.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
