@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+motor
+pydantic
+python-dotenv
+httpx
+PyPDF2
+python-docx
+beautifulsoup4
+emergentintegrations
+gunicorn
+python-multipart
