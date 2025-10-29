@@ -17,7 +17,7 @@ import io
 import re
 from bs4 import BeautifulSoup
 import base64
-from emergent.llm.chat import LlmChat, UserMessage
+from emergent_llm.chat import LlmChat, UserMessage
 
 # Carga las variables de entorno (claves secretas)
 # Esto está ajustado para que funcione en un servidor
