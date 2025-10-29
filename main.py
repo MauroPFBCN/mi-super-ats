@@ -8,7 +8,7 @@ import base64
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 
-from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Body
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Body, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, EmailStr, HttpUrl, validator
 from motor.motor_asyncio import AsyncIOMotorClient
