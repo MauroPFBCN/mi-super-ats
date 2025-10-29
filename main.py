@@ -324,7 +324,7 @@ async def create_notion_page(candidate_data: CandidateDataInput) -> tuple[str, s
     except Exception as e: logger.exception("Error inesperado creando Notion"); raise HTTPException(status_code=500, detail=f"Error interno Notion: {e}")
 
 # --- API Endpoints ---
-api_router = APIRouter(prefix="/api")
+api_router = APIRouter()
 
 @api_router.get("/options", response_model=Dict[str, List[str]])
 async def get_notion_options_endpoint_v3():
