@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ATS Babel - Procesador de CV</title>
     <style>
+        /* --- Estilos (iguales que la versión anterior, no es necesario copiarlos de nuevo si ya los tienes) --- */
         :root {
             --primary-color: #0052cc; /* Azul Babel */
             --secondary-color: #f4f5f7; /* Gris claro fondo */
@@ -21,124 +22,55 @@
             --spacing: 1rem;
         }
         body {
-            font-family: var(--font-family);
-            background-color: var(--secondary-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: var(--spacing);
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
+            font-family: var(--font-family); background-color: var(--secondary-color); color: var(--text-color);
+            margin: 0; padding: var(--spacing); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh;
         }
         .container {
-            background-color: var(--white);
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: calc(var(--spacing) * 1.5);
-            width: 100%;
-            max-width: 750px; /* Aún más ancho */
-            margin-top: var(--spacing);
-            margin-bottom: var(--spacing);
-            box-sizing: border-box;
+            background-color: var(--white); border-radius: var(--border-radius); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: calc(var(--spacing) * 1.5); width: 100%; max-width: 750px; margin-top: var(--spacing); margin-bottom: var(--spacing); box-sizing: border-box;
         }
-        h1 {
-            color: var(--primary-color);
-            text-align: center;
-            margin-bottom: calc(var(--spacing) * 1.5);
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-         .form-grid {
-            display: grid;
-            /* Dos columnas flexibles, mínimo 250px */
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: var(--spacing);
-            margin-bottom: var(--spacing);
-        }
+        h1 { color: var(--primary-color); text-align: center; margin-bottom: calc(var(--spacing) * 1.5); font-size: 1.5rem; font-weight: 600; }
+        h2 { font-size: 1.1rem; color: #5e6c84; margin-top: calc(var(--spacing) * 1.5); margin-bottom: var(--spacing); padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); }
+         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing); margin-bottom: var(--spacing); }
         .form-group { display: flex; flex-direction: column; }
-        .full-width { grid-column: 1 / -1; } /* Ocupa todo el ancho disponible */
-
-        label {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-            color: #42526e; /* Gris más oscuro para labels */
-        }
+        .full-width { grid-column: 1 / -1; }
+        label { font-weight: 600; margin-bottom: 0.5rem; font-size: 0.875rem; color: #42526e; }
         input[type="text"], input[type="email"], input[type="url"], input[type="file"], select, textarea, .multiselect-input {
-            padding: var(--input-padding);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            font-size: 0.95rem; /* Ligeramente más pequeño */
-            width: 100%;
-            box-sizing: border-box;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            background-color: #fafbfc; /* Fondo input ligeramente gris */
+            padding: var(--input-padding); border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.95rem;
+            width: 100%; box-sizing: border-box; transition: border-color 0.2s ease, box-shadow 0.2s ease; background-color: #fafbfc;
         }
-        input:focus, select:focus, textarea:focus, .multiselect-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.2);
-            background-color: var(--white);
-        }
+        input:focus, select:focus, textarea:focus, .multiselect-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.2); background-color: var(--white); }
         input[type="file"] { padding: 0.5rem; background-color: var(--white); }
         textarea { min-height: 80px; resize: vertical; }
-
-        .input-group { display: flex; gap: 1.5rem; margin-bottom: var(--spacing); } /* Más espacio entre radios */
-        .input-group label { font-weight: normal; display:flex; align-items:center; }
+        .input-group { display: flex; gap: 1.5rem; margin-bottom: var(--spacing); }
+        .input-group label { font-weight: normal; display:flex; align-items:center; cursor: pointer;}
         .input-group input[type="radio"] { margin-right: 0.5rem; }
-        .input-option { display: none; }
-        .input-option.active { display: block; }
-
+        .input-option { display: none; } .input-option.active { display: block; }
         button {
-            background-color: var(--primary-color);
-            color: var(--white);
-            padding: calc(var(--input-padding) * 1.1) calc(var(--spacing) * 1.5); /* Ligeramente más alto */
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: background-color 0.2s ease, box-shadow 0.2s ease;
-            width: 100%;
-            text-align: center;
+            background-color: var(--primary-color); color: var(--white); padding: calc(var(--input-padding) * 1.1) calc(var(--spacing) * 1.5);
+            border: none; border-radius: var(--border-radius); cursor: pointer; font-size: 1rem; font-weight: 600;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease; width: 100%; text-align: center;
         }
         button:hover:not(:disabled) { background-color: #003e99; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         button:disabled { background-color: #ebecf0; color: var(--disabled-color); cursor: not-allowed; border: 1px solid var(--border-color);}
         .button-secondary { background-color: #6c757d; }
         .button-secondary:hover:not(:disabled) { background-color: #5a6268; }
         .button-group { display: flex; gap: var(--spacing); margin-top: calc(var(--spacing) * 1.5); }
-
-        .status-message {
-            margin-top: var(--spacing); padding: var(--input-padding); border-radius: var(--border-radius);
-            text-align: center; font-weight: 500; font-size: 0.9rem; border: 1px solid transparent;
-        }
+        .status-message { margin-top: var(--spacing); padding: var(--input-padding); border-radius: var(--border-radius); text-align: center; font-weight: 500; font-size: 0.9rem; border: 1px solid transparent; }
         .status-message.error { background-color: #ffebe6; color: var(--error-color); border-color: #ffbdad;}
         .status-message.success { background-color: #e3fcef; color: var(--success-color); border-color: #abf5d1;}
         .status-message.loading { background-color: #deebff; color: var(--primary-color); border-color: #b3d4ff;}
-        .status-message.warning { background-color: #fff0b3; color: #ff8b00; border-color: var(--warning-color);} /* Estilo warning */
-
-        /* Multi-select mejorado */
+        .status-message.warning { background-color: #fff0b3; color: #ff8b00; border-color: var(--warning-color);}
         .multiselect-container { position: relative; }
-        .multiselect-dropdown {
-            display: none; position: absolute; background-color: white; border: 1px solid var(--border-color);
-            border-radius: var(--border-radius); max-height: 200px; overflow-y: auto; width: 100%; z-index: 10;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-top: 2px;
-        }
+        .multiselect-dropdown { display: none; position: absolute; background-color: white; border: 1px solid var(--border-color); border-radius: var(--border-radius); max-height: 200px; overflow-y: auto; width: 100%; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-top: 2px; }
         .multiselect-dropdown.show { display: block; }
         .multiselect-option { padding: 0.6rem var(--input-padding); cursor: pointer; font-size: 0.9rem; border-bottom: 1px solid var(--secondary-color); }
         .multiselect-option:last-child { border-bottom: none; }
         .multiselect-option:hover { background-color: var(--secondary-color); }
-        .multiselect-selected-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
-        .multiselect-selected-item {
-            background-color: #e0e0e0; color: var(--text-color); padding: 0.3rem 0.6rem;
-            border-radius: 1rem; font-size: 0.8rem; display: flex; align-items: center;
-        }
-        .multiselect-remove-btn {
-            background: none; border: none; color: #6b778c; margin-left: 0.4rem; cursor: pointer;
-            padding: 0; font-size: 1.1rem; line-height: 1; font-weight: bold;
-        }
-        hr { grid-column: 1 / -1; border: none; border-top: 1px solid var(--border-color); margin: var(--spacing) 0; }
+        .multiselect-selected-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; min-height: 20px; /* Evita colapso */}
+        .multiselect-selected-item { background-color: #e0e0e0; color: var(--text-color); padding: 0.3rem 0.6rem; border-radius: 1rem; font-size: 0.8rem; display: flex; align-items: center; }
+        .multiselect-remove-btn { background: none; border: none; color: #6b778c; margin-left: 0.4rem; cursor: pointer; padding: 0; font-size: 1.1rem; line-height: 1; font-weight: bold; }
+        hr { grid-column: 1 / -1; border: none; border-top: 1px solid var(--border-color); margin: calc(var(--spacing) * 1.5) 0; }
     </style>
 </head>
 <body>
@@ -164,7 +96,7 @@
 
             <hr>
 
-             <h2>Datos del Candidato <span style="font-weight:normal; font-size: 0.8em;">(La IA rellenará estos campos después de analizar)</span></h2>
+            <h2>Datos del Candidato <span style="font-weight:normal; font-size: 0.8em;">(La IA rellenará/actualizará estos campos)</span></h2>
             <div class="form-grid">
                 <div class="form-group">
                     <label for="nombre_apellido">Nombre y Apellido *</label>
@@ -194,6 +126,36 @@
                     <label for="skills">Skills (separado por comas)</label>
                     <input type="text" id="skills" name="skills" placeholder="Ej: Java, Python, React...">
                 </div>
+                </div>
+
+            <hr>
+
+             <h2>Información Adicional (Opcional)</h2>
+            <div class="form-grid">
+                 <div class="form-group">
+                    <label for="salary_expectation">Expectativa Salarial</label>
+                    <input type="text" id="salary_expectation" name="salary_expectation" placeholder="Ej: 50,000 EUR Anuales Brutos">
+                 </div>
+                 <div class="form-group">
+                    <label for="stage">Stage</label>
+                    <select id="stage" name="stage"></select>
+                </div>
+                 <div class="form-group">
+                    <label for="resolution">Resolution</label>
+                    <select id="resolution" name="resolution"></select>
+                </div>
+                 <div class="form-group">
+                    <label for="source">Source</label>
+                    <select id="source" name="source"></select>
+                </div>
+                 <div class="form-group">
+                    <label for="rejection_reason">Rejection Reason</label>
+                    <select id="rejection_reason" name="rejection_reason"></select>
+                </div>
+                <div class="form-group">
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender"></select>
+                </div>
                  <div class="form-group full-width">
                      <label for="languages-multiselect">Idiomas</label>
                      <div id="languages-multiselect" class="multiselect-container">
@@ -202,36 +164,7 @@
                         <div class="multiselect-selected-list"></div>
                     </div>
                 </div>
-                 <div class="form-group">
-                    <label for="gender">Gender</label>
-                    <select id="gender" name="gender"></select>
-                </div>
-            </div>
-
-            <hr>
-
-            <h2>Información Adicional (Opcional)</h2>
-            <div class="form-grid">
-                 <div class="form-group">
-                    <label for="salary_expectation">Expectativa Salarial</label>
-                    <input type="text" id="salary_expectation" name="salary_expectation" placeholder="Ej: 50,000 EUR Anuales Brutos">
-                </div>
-                <div class="form-group">
-                    <label for="stage">Stage</label>
-                    <select id="stage" name="stage"></select>
-                </div>
-                <div class="form-group">
-                    <label for="resolution">Resolution</label>
-                    <select id="resolution" name="resolution"></select>
-                </div>
-                <div class="form-group">
-                    <label for="source">Source</label>
-                    <select id="source" name="source"></select>
-                </div>
-                 <div class="form-group"> <label for="rejection_reason">Rejection Reason</label>
-                    <select id="rejection_reason" name="rejection_reason"></select>
-                </div>
-                <div class="form-group full-width">
+                 <div class="form-group full-width">
                     <label for="short_notes">Notas Cortas</label>
                     <textarea id="short_notes" name="short_notes" placeholder="Añade comentarios relevantes aquí..."></textarea>
                 </div>
@@ -249,13 +182,15 @@
 
 <script>
     // --- CONFIGURACIÓN ---
-   const API_URL = "https://mi-super-ats.onrender.com";
+    const API_URL = "[https://mi-super-ats.onrender.com](https://mi-super-ats.onrender.com)"; // TU URL DE RENDER
     // ---------------------
 
+    // Selectores y estado (igual que antes)
     const form = document.getElementById('ats-form');
     const analyzeBtn = document.getElementById('analyze-btn');
     const submitBtn = document.getElementById('submit-btn');
-    const statusMessage = document.getElementById('status-message');
+    /* ... (resto de selectores igual) ... */
+     const statusMessage = document.getElementById('status-message');
     const sourceOptions = document.querySelectorAll('input[name="source_option"]');
     const cvInputOption = document.getElementById('cv-input-option');
     const linkedinInputOption = document.getElementById('linkedin-input-option');
@@ -279,47 +214,43 @@
         gender: document.getElementById('gender'),
         short_notes: document.getElementById('short_notes'),
     };
-
     let currentFileInfo = null;
     let currentSourceType = 'cv';
     let availableLanguages = [];
     let selectedLanguages = [];
+    const langContainer = document.getElementById('languages-multiselect');
+    const langInput = langContainer.querySelector('.multiselect-input');
+    const langDropdown = langContainer.querySelector('.multiselect-dropdown');
+    const langSelectedList = langContainer.querySelector('.multiselect-selected-list');
 
-    // --- Funciones Auxiliares ---
-    function showStatus(message, type = 'loading') { /* ... (igual que antes) ... */
+
+    // Funciones Auxiliares (igual que antes)
+    function showStatus(message, type = 'loading') { /* ... */
          statusMessage.textContent = message;
-         statusMessage.className = `status-message ${type}`; // Usa warning para duplicados
+         statusMessage.className = `status-message ${type}`;
          statusMessage.style.display = 'block';
     }
-    function hideStatus() { /* ... (igual que antes) ... */ statusMessage.style.display = 'none'; }
-    function setButtonsState(loading = false, analyzed = false) {
+    function hideStatus() { /* ... */ statusMessage.style.display = 'none'; }
+    function setButtonsState(loading = false, analyzed = false) { /* ... */
         analyzeBtn.disabled = loading;
-        submitBtn.disabled = loading || !analyzed; // Habilitar solo si se ha analizado y no está cargando
+        submitBtn.disabled = loading || !analyzed;
         analyzeBtn.textContent = loading ? 'Analizando...' : '1. Analizar con IA';
         submitBtn.textContent = loading ? 'Enviando...' : '2. Enviar a Notion';
-         // Cambiar estilo de botón submit si está habilitado
-         submitBtn.classList.toggle('button-secondary', submitBtn.disabled);
+        submitBtn.classList.toggle('button-secondary', submitBtn.disabled);
     }
-    function populateSelect(selectElement, options) { /* ... (igual que antes) ... */
+    function populateSelect(selectElement, options) { /* ... */
         selectElement.innerHTML = '';
-        options.forEach(optionText => { // Renombrado a optionText para claridad
+        options.forEach(optionText => {
             const opt = document.createElement('option');
-            // Usar el texto como valor, excepto para la opción vacía
             opt.value = optionText;
             opt.textContent = optionText === "" ? '--- Selecciona ---' : optionText;
             selectElement.appendChild(opt);
         });
     }
 
-
-    // --- Lógica Multi-select Idiomas ---
-    const langContainer = document.getElementById('languages-multiselect');
-    const langInput = langContainer.querySelector('.multiselect-input');
-    const langDropdown = langContainer.querySelector('.multiselect-dropdown');
-    const langSelectedList = langContainer.querySelector('.multiselect-selected-list');
-
-    function renderLangDropdown(filter = '') { /* ... (igual que antes) ... */
-        langDropdown.innerHTML = '';
+    // Lógica Multi-select Idiomas (igual que antes)
+    function renderLangDropdown(filter = '') { /* ... */
+         langDropdown.innerHTML = '';
         const filteredLangs = availableLanguages.filter(lang =>
             lang.toLowerCase().includes(filter.toLowerCase()) && !selectedLanguages.includes(lang)
         );
@@ -331,64 +262,52 @@
             optionDiv.addEventListener('click', () => selectLanguage(lang));
             langDropdown.appendChild(optionDiv);
         });
-        langDropdown.classList.toggle('show', filteredLangs.length > 0 || filter.length > 0); // Mostrar si hay filtro aunque no haya resultados
+        langDropdown.classList.toggle('show', filteredLangs.length > 0 || filter.length > 0);
     }
-    function renderSelectedLanguages() { /* ... (igual que antes) ... */
-         langSelectedList.innerHTML = '';
+    function renderSelectedLanguages() { /* ... */
+        langSelectedList.innerHTML = '';
         selectedLanguages.forEach(lang => {
             const itemSpan = document.createElement('span');
             itemSpan.classList.add('multiselect-selected-item');
             itemSpan.textContent = lang;
             const removeBtn = document.createElement('button');
             removeBtn.classList.add('multiselect-remove-btn');
-            removeBtn.innerHTML = '&times;'; // Usar HTML entity para 'x'
-            removeBtn.type = 'button'; // Importante para no enviar formulario
-            removeBtn.title = `Quitar ${lang}`; // Accesibilidad
-            removeBtn.addEventListener('click', (e) => {
-                 e.stopPropagation(); // Evitar que el click se propague
-                 deselectLanguage(lang);
-             });
+            removeBtn.innerHTML = '&times;';
+            removeBtn.type = 'button';
+            removeBtn.title = `Quitar ${lang}`;
+            removeBtn.addEventListener('click', (e) => { e.stopPropagation(); deselectLanguage(lang); });
             itemSpan.appendChild(removeBtn);
             langSelectedList.appendChild(itemSpan);
         });
     }
-    function selectLanguage(lang) { /* ... (igual que antes) ... */
+    function selectLanguage(lang) { /* ... */
         if (!selectedLanguages.includes(lang)) {
-            selectedLanguages.push(lang);
-            renderSelectedLanguages();
-            langInput.value = ''; // Limpiar input tras seleccionar
-            renderLangDropdown(); // Actualizar dropdown
-            langDropdown.classList.remove('show');
-             langInput.placeholder = "Buscar o seleccionar idiomas..."; // Reset placeholder
+            selectedLanguages.push(lang); selectedLanguages.sort(); // Mantener ordenado
+            renderSelectedLanguages(); langInput.value = ''; renderLangDropdown(); langDropdown.classList.remove('show');
+            langInput.placeholder = "Buscar o seleccionar idiomas...";
         }
     }
-     function deselectLanguage(lang) { /* ... (igual que antes) ... */
-         selectedLanguages = selectedLanguages.filter(l => l !== lang);
-         renderSelectedLanguages();
-         // Opcional: re-render dropdown si está abierto
-         if(langDropdown.classList.contains('show')) {
-             renderLangDropdown(langInput.value);
-         }
+     function deselectLanguage(lang) { /* ... */
+         selectedLanguages = selectedLanguages.filter(l => l !== lang); renderSelectedLanguages();
+         if(langDropdown.classList.contains('show')) { renderLangDropdown(langInput.value); }
      }
-
     langInput.addEventListener('input', () => renderLangDropdown(langInput.value));
     langInput.addEventListener('focus', () => renderLangDropdown(langInput.value));
-    langInput.addEventListener('keydown', (e) => { // Permitir seleccionar con Enter
-         if (e.key === 'Enter') {
+    langInput.addEventListener('keydown', (e) => { /* ... (seleccionar con Enter) ... */
+        if (e.key === 'Enter') {
              e.preventDefault();
              const firstOption = langDropdown.querySelector('.multiselect-option');
-             if (firstOption) {
-                 selectLanguage(firstOption.dataset.value);
-             }
+             if (firstOption) { selectLanguage(firstOption.dataset.value); }
          }
-    });
-    document.addEventListener('click', (e) => { /* ... (igual que antes) ... */ if (!langContainer.contains(e.target)) { langDropdown.classList.remove('show'); } });
+     });
+    document.addEventListener('click', (e) => { /* ... (cerrar al click fuera) ... */ if (!langContainer.contains(e.target)) { langDropdown.classList.remove('show'); } });
 
-    // --- Carga Inicial ---
-    async function loadInitialOptions() {
-        try {
+
+    // Carga Inicial (igual que antes)
+    async function loadInitialOptions() { /* ... */
+         try {
             showStatus('Cargando opciones...', 'loading');
-            const response = await fetch(`${API_URL}/api/options`);
+            const response = await fetch(`${API_URL}/api/options`); // Asegúrate que API_URL es correcta
             if (!response.ok) throw new Error(`Error ${response.status} cargando opciones.`);
             const options = await response.json();
 
@@ -399,73 +318,55 @@
             populateSelect(fields.gender, options.GENDER || []);
 
             availableLanguages = options.LANGUAJE || [];
+            // availableLanguages.sort(); // Ya vienen ordenados del backend
             renderLangDropdown();
             hideStatus();
 
         } catch (error) {
             showStatus(`Error crítico cargando opciones: ${error.message}. Recarga la página.`, 'error');
-            analyzeBtn.disabled = true; // Deshabilitar si no cargan opciones
-            submitBtn.disabled = true;
+            console.error("Error fetching options:", error); // Añadir log de consola
+            analyzeBtn.disabled = true; submitBtn.disabled = true;
         }
     }
 
-    // --- Manejadores de Eventos ---
-    sourceOptions.forEach(radio => { /* ... (igual que antes) ... */
-         radio.addEventListener('change', (e) => {
+    // Manejadores de Eventos (igual que antes)
+    sourceOptions.forEach(radio => { /* ... (cambio CV/LinkedIn) ... */
+        radio.addEventListener('change', (e) => {
             currentSourceType = e.target.value;
             cvInputOption.classList.toggle('active', currentSourceType === 'cv');
             linkedinInputOption.classList.toggle('active', currentSourceType === 'linkedin');
-            if (currentSourceType === 'cv') linkedinUrlInput.value = '';
-            else cvFileInput.value = '';
+            if (currentSourceType === 'cv') linkedinUrlInput.value = ''; else cvFileInput.value = '';
             currentFileInfo = null;
-            // Limpiar campos extraídos al cambiar fuente? Decisión de UX. Por ahora no.
-            // form.reset(); // Esto limpiaría TODO
-            // loadInitialOptions(); // Esto resetea dropdowns
-            submitBtn.disabled = true; // Deshabilitar submit al cambiar fuente
-            submitBtn.classList.add('button-secondary');
+            // Resetear campos extraídos y estado al cambiar fuente
+            Object.values(fields).forEach(field => {
+                 if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') field.value = '';
+                 else if (field.tagName === 'SELECT') field.selectedIndex = 0;
+            });
+            selectedLanguages = []; renderSelectedLanguages(); // Limpiar idiomas
+            setButtonsState(false, false); // Deshabilitar botones
             hideStatus();
         });
-    });
+     });
 
-    analyzeBtn.addEventListener('click', async () => {
-        hideStatus();
-        setButtonsState(true, false); // Cargando, Aún no analizado
-        currentFileInfo = null;
-
-        const formData = new FormData();
-        let body = null;
+    analyzeBtn.addEventListener('click', async () => { /* ... (lógica de análisis igual que antes) ... */
+         hideStatus(); setButtonsState(true, false); currentFileInfo = null;
+        const formData = new FormData(); let body = null;
 
         if (currentSourceType === 'cv') {
             const file = cvFileInput.files[0];
-            if (!file) {
-                showStatus('Por favor, selecciona un archivo CV.', 'error');
-                setButtonsState(false, false);
-                return;
-            }
-            formData.append('file', file);
-            body = formData;
+            if (!file) { showStatus('Selecciona un archivo CV.', 'error'); setButtonsState(false, false); return; }
+            formData.append('file', file); body = formData;
         } else {
              const url = linkedinUrlInput.value.trim();
-            if (!url) {
-                showStatus('Por favor, introduce una URL de LinkedIn.', 'error');
-                setButtonsState(false, false);
-                return;
-            }
-             // Validar URL simple en frontend
-             try { new URL(url); } catch {
-                 showStatus('La URL de LinkedIn no parece válida.', 'error');
-                 setButtonsState(false, false);
-                 return;
-             }
-            formData.append('linkedin_url', url);
-            body = formData;
+            if (!url) { showStatus('Introduce una URL de LinkedIn.', 'error'); setButtonsState(false, false); return; }
+             try { new URL(url); } catch { showStatus('URL de LinkedIn inválida.', 'error'); setButtonsState(false, false); return; }
+            formData.append('linkedin_url', url); body = formData;
         }
 
         try {
-            showStatus('Analizando con IA... Puede tardar unos segundos.', 'loading');
+            showStatus('Analizando con IA...', 'loading');
             const response = await fetch(`${API_URL}/api/process`, { method: 'POST', body: body });
             const data = await response.json();
-
             if (!response.ok) { throw new Error(data.detail || `Error del servidor: ${response.status}`); }
 
             const extracted = data.extracted_data || {};
@@ -473,50 +374,45 @@
             fields.email.value = extracted.email || '';
             fields.phone.value = extracted.phone || '';
             fields.location.value = extracted.location || '';
-            fields.linkedin_url.value = extracted.linkedin_url || ''; // URL viene validada/limpiada
+            fields.linkedin_url.value = extracted.linkedin_url || '';
             fields.current_company.value = extracted.current_company || '';
             fields.skills.value = (extracted.skills || []).join(', ');
-            fields.gender.value = extracted.gender || ''; // Seleccionar el género extraído
+            fields.gender.value = extracted.gender || ''; // Seleccionar el género extraído si existe
 
             selectedLanguages = extracted.languages || [];
-            renderSelectedLanguages(); // Renderizar idiomas preseleccionados
+            selectedLanguages.sort(); // Ordenar los preseleccionados
+            renderSelectedLanguages();
 
             currentFileInfo = data.file_info;
-            currentSourceType = data.source_type; // Confirmar
+            currentSourceType = data.source_type;
 
             let statusType = 'success';
-            let message = 'Análisis completado. Revisa y edita si es necesario antes de enviar.';
+            let message = 'Análisis OK. Revisa/edita antes de enviar.';
             if (data.duplicate_info && data.duplicate_info.exists) {
-                statusType = 'warning'; // Cambiado a warning
-                message = `¡Atención! Email duplicado (${fields.email.value}). Revisa antes de enviar o envía igualmente.`;
+                statusType = 'warning';
+                message = `EMAIL DUPLICADO (${fields.email.value}). Revisa/envía igualmente.`;
             }
             showStatus(message, statusType);
-            setButtonsState(false, true); // No cargando, Analizado (habilita submit)
+            setButtonsState(false, true); // Habilitar submit
 
         } catch (error) {
-            showStatus(`Error en el análisis: ${error.message}`, 'error');
-            console.error("Error detallado:", error);
-            setButtonsState(false, false); // No cargando, No analizado (deshabilita submit)
+            showStatus(`Error análisis: ${error.message}`, 'error');
+            console.error("Error detallado análisis:", error);
+            setButtonsState(false, false);
         }
     });
 
-    submitBtn.addEventListener('click', async () => {
-        if (!fields.nombre_apellido.value.trim()) {
-            showStatus('El campo "Nombre y Apellido" es obligatorio.', 'error');
-            fields.nombre_apellido.focus();
-            return;
-        }
-        hideStatus();
-        setButtonsState(true, true); // Cargando, Analizado
+    submitBtn.addEventListener('click', async () => { /* ... (lógica de envío igual que antes) ... */
+        if (!fields.nombre_apellido.value.trim()) { showStatus('Nombre y Apellido obligatorio.', 'error'); fields.nombre_apellido.focus(); return; }
+        hideStatus(); setButtonsState(true, true);
 
         const candidatePayload = {
             nombre_apellido: fields.nombre_apellido.value.trim(),
-            email: fields.email.value.trim() || null, // Enviar null si está vacío
+            email: fields.email.value.trim() || null,
             phone: fields.phone.value.trim(),
             location: fields.location.value.trim(),
-            linkedin_url: fields.linkedin_url.value.trim() || null, // Enviar null si está vacío
+            linkedin_url: fields.linkedin_url.value.trim() || null,
             current_company: fields.current_company.value.trim(),
-            // Convertir skills de string a lista
             skills: fields.skills.value ? fields.skills.value.split(',').map(s => s.trim()).filter(s => s) : [],
             salary_expectation: fields.salary_expectation.value.trim(),
             stage: fields.stage.value,
@@ -534,66 +430,41 @@
              try {
                  showStatus('Enviando a Notion...', 'loading');
                  const response = await fetch(`${API_URL}/api/candidates/confirm-create`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        candidate_data: candidatePayload,
-                        force_create_duplicate: force
-                    })
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ candidate_data: candidatePayload, force_create_duplicate: force })
                 });
                 const data = await response.json();
-
                  if (!response.ok) {
                     if (response.status === 409) {
-                        if (confirm(`EMAIL DUPLICADO:\n${data.detail}\n\n¿Deseas crear el registro igualmente?`)) {
-                           await callConfirmCreate(true);
-                        } else {
-                           showStatus('Creación cancelada por duplicado.', 'warning'); // Cambiado a warning
-                           setButtonsState(false, true); // No cargando, Analizado (permitir reintentar)
-                        }
-                    } else {
-                        throw new Error(data.detail || `Error del servidor: ${response.status}`);
-                    }
+                        if (confirm(`EMAIL DUPLICADO:\n${data.detail}\n\n¿Crear igualmente?`)) { await callConfirmCreate(true); }
+                        else { showStatus('Creación cancelada.', 'warning'); setButtonsState(false, true); }
+                    } else { throw new Error(data.detail || `Error servidor: ${response.status}`); }
                  } else {
-                    showStatus(data.message || 'Candidato enviado a Notion con éxito.', 'success');
-                    if (data.notion_url) {
-                        window.open(data.notion_url, '_blank'); // Abrir Notion
-                    }
-                     // Limpiar campos clave para nuevo candidato
-                     fields.nombre_apellido.value = '';
-                     fields.email.value = '';
-                     fields.phone.value = '';
-                     fields.location.value = '';
-                     fields.linkedin_url.value = '';
-                     fields.current_company.value = '';
-                     fields.skills.value = '';
-                     fields.salary_expectation.value = ''; // Limpiar salario
-                     fields.short_notes.value = ''; // Limpiar notas
-                     cvFileInput.value = ''; // Limpiar input file
-                     linkedinUrlInput.value = ''; // Limpiar input URL
-                     currentFileInfo = null;
-                     selectedLanguages = []; renderSelectedLanguages(); // Limpiar idiomas seleccionados
-
-                     // Mantener Stage, Resolution, Source, Gender
-                     setButtonsState(false, false); // No cargando, No analizado (deshabilita submit hasta nuevo análisis)
+                    showStatus(data.message || 'Éxito al enviar a Notion.', 'success');
+                    if (data.notion_url) { window.open(data.notion_url, '_blank'); }
+                     // Limpiar campos clave
+                     fields.nombre_apellido.value = ''; fields.email.value = ''; fields.phone.value = ''; fields.location.value = '';
+                     fields.linkedin_url.value = ''; fields.current_company.value = ''; fields.skills.value = '';
+                     fields.salary_expectation.value = ''; fields.short_notes.value = '';
+                     cvFileInput.value = ''; linkedinUrlInput.value = ''; currentFileInfo = null;
+                     selectedLanguages = []; renderSelectedLanguages();
+                     // Mantener dropdowns Stage, etc.
+                     setButtonsState(false, false); // Resetear botones
                 }
-
             } catch (error) {
-                showStatus(`Error al enviar a Notion: ${error.message}`, 'error');
-                console.error("Error detallado:", error);
-                setButtonsState(false, true); // No cargando, Analizado (permitir reintentar submit)
+                showStatus(`Error envío Notion: ${error.message}`, 'error');
+                console.error("Error detallado envío:", error);
+                setButtonsState(false, true); // Permitir reintento
             }
         };
-
         await callConfirmCreate(false); // Llamada inicial
-
     });
 
-    // --- Inicializar la página ---
+    // Inicializar
     document.addEventListener('DOMContentLoaded', () => {
         loadInitialOptions();
-        setButtonsState(false, false); // Estado inicial: no cargando, no analizado
-        mainTitle.textContent = "Analizar CV"; // Corregir título
+        setButtonsState(false, false);
+        mainTitle.textContent = "Analizar CV"; // Asegurar título correcto
     });
 
 </script>
