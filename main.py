@@ -41,14 +41,51 @@ try:
     # Intenta obtener el nombre de la DB para forzar conexión/error temprano
     db = mongo_client.get_database(DB_NAME)
     # Considerar: await db.command('ping') dentro de una función async startup si es necesario
-    logger.info("Conexión inicial a MongoDB establecida (o diferida).")
-except Exception as mongo_err:
-    logger.error(f"Error CRÍTICO conectando a MongoDB al inicio: {mongo_err}")
-    # Podríamos decidir salir si la DB es esencial al inicio
-    # raise SystemExit(f"MongoDB connection failed: {mongo_err}") from mongo_err
-    db = None # Marcar DB como no disponible
+   # --- Clientes (Modificado) ---
+mongo_client = None # Inicializar como None
+db = None           # Inicializar como None
+logger.info("Clientes MongoDB y OpenAI se inicializarán en el evento startup.")
 
 openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+if not openai_client:
+    logger.warning("Cliente OpenAI no inicializado (falta OPENAI_API_KEY).")
+
+# ... (Pydantic models, options, functions etc. remain the same) ...
+
+# --- API Endpoints ---
+# ... (endpoints remain the same) ...
+
+# --- Inicialización de la App ---
+app = FastAPI( title="ATS Babel - CV Processor v5.2", version="5.2.0")
+
+app.add_middleware( CORSMiddleware, allow_origins=CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.include_router(api_router)
+
+@app.get("/", include_in_schema=False)
+async def root_v5_2(): return {"message": "ATS API v5.2 running."}
+
+@app.on_event("startup")
+async def startup_event():
+    global mongo_client, db # Necesario para modificar las variables globales
+    logger.info("Evento startup: Intentando conectar a MongoDB...")
+    if MONGO_URL and DB_NAME: # Solo intentar si las variables existen
+        try:
+            mongo_client = AsyncIOMotorClient(MONGO_URL, serverSelectionTimeoutMS=5000) # Timeout corto
+            # Forzar conexión/autenticación
+            await mongo_client.admin.command('ping')
+            db = mongo_client.get_database(DB_NAME)
+            logger.info("Conexión a MongoDB verificada con éxito durante startup.")
+        except Exception as e:
+            logger.error(f"Ping a MongoDB falló durante startup: {e}. La comprobación de duplicados y guardado fallarán.")
+            # Mantener mongo_client y db como None
+    else:
+         logger.error("No se intentará conectar a MongoDB, falta MONGO_URL o DB_NAME.")
+
+@app.on_event("shutdown")
+async def shutdown_db_client_v5_2():
+    if mongo_client:
+        mongo_client.close()
+        logger.info("Conexión MongoDB cerrada.")
 if not openai_client:
     logger.warning("Cliente OpenAI no inicializado (falta OPENAI_API_KEY).")
 
