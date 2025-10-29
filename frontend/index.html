@@ -3,146 +3,599 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Babel - Subir CV</title>
+    <title>ATS Babel - Procesador de CV</title>
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            display: grid; 
-            place-items: center; 
-            min-height: 90vh; 
-            background-color: #f4f7f6;
+        :root {
+            --primary-color: #0052cc; /* Azul Babel */
+            --secondary-color: #f4f5f7; /* Gris claro fondo */
+            --text-color: #172b4d; /* Azul oscuro texto */
+            --border-color: #dfe1e6;
+            --error-color: #de350b;
+            --success-color: #00875a;
+            --warning-color: #ffab00; /* Naranja para warnings */
+            --disabled-color: #a5adba;
+            --white: #ffffff;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            --border-radius: 4px;
+            --input-padding: 0.75rem;
+            --spacing: 1rem;
+        }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--secondary-color);
+            color: var(--text-color);
             margin: 0;
+            padding: var(--spacing);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
         }
-        #app {
-            background: #ffffff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            width: 90%;
-            max-width: 500px;
-        }
-        h1 { color: #333; }
-        input[type="file"] {
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 4px;
+        .container {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: calc(var(--spacing) * 1.5);
             width: 100%;
+            max-width: 750px; /* Aún más ancho */
+            margin-top: var(--spacing);
+            margin-bottom: var(--spacing);
             box-sizing: border-box;
         }
-        button {
-            background-color: #007aff;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: calc(var(--spacing) * 1.5);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+         .form-grid {
+            display: grid;
+            /* Dos columnas flexibles, mínimo 250px */
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing);
+            margin-bottom: var(--spacing);
+        }
+        .form-group { display: flex; flex-direction: column; }
+        .full-width { grid-column: 1 / -1; } /* Ocupa todo el ancho disponible */
+
+        label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: #42526e; /* Gris más oscuro para labels */
+        }
+        input[type="text"], input[type="email"], input[type="url"], input[type="file"], select, textarea, .multiselect-input {
+            padding: var(--input-padding);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem; /* Ligeramente más pequeño */
             width: 100%;
-            margin-top: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background-color: #fafbfc; /* Fondo input ligeramente gris */
         }
-        button:hover { background-color: #0056b3; }
-        button:disabled { background-color: #c0c0c0; }
-        #resultado {
-            background: #eee;
-            padding: 1rem;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-family: monospace;
-            max-height: 300px;
-            overflow-y: auto;
-            display: none; /* Oculto al inicio */
+        input:focus, select:focus, textarea:focus, .multiselect-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.2);
+            background-color: var(--white);
         }
+        input[type="file"] { padding: 0.5rem; background-color: var(--white); }
+        textarea { min-height: 80px; resize: vertical; }
+
+        .input-group { display: flex; gap: 1.5rem; margin-bottom: var(--spacing); } /* Más espacio entre radios */
+        .input-group label { font-weight: normal; display:flex; align-items:center; }
+        .input-group input[type="radio"] { margin-right: 0.5rem; }
+        .input-option { display: none; }
+        .input-option.active { display: block; }
+
+        button {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: calc(var(--input-padding) * 1.1) calc(var(--spacing) * 1.5); /* Ligeramente más alto */
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+            text-align: center;
+        }
+        button:hover:not(:disabled) { background-color: #003e99; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button:disabled { background-color: #ebecf0; color: var(--disabled-color); cursor: not-allowed; border: 1px solid var(--border-color);}
+        .button-secondary { background-color: #6c757d; }
+        .button-secondary:hover:not(:disabled) { background-color: #5a6268; }
+        .button-group { display: flex; gap: var(--spacing); margin-top: calc(var(--spacing) * 1.5); }
+
+        .status-message {
+            margin-top: var(--spacing); padding: var(--input-padding); border-radius: var(--border-radius);
+            text-align: center; font-weight: 500; font-size: 0.9rem; border: 1px solid transparent;
+        }
+        .status-message.error { background-color: #ffebe6; color: var(--error-color); border-color: #ffbdad;}
+        .status-message.success { background-color: #e3fcef; color: var(--success-color); border-color: #abf5d1;}
+        .status-message.loading { background-color: #deebff; color: var(--primary-color); border-color: #b3d4ff;}
+        .status-message.warning { background-color: #fff0b3; color: #ff8b00; border-color: var(--warning-color);} /* Estilo warning */
+
+        /* Multi-select mejorado */
+        .multiselect-container { position: relative; }
+        .multiselect-dropdown {
+            display: none; position: absolute; background-color: white; border: 1px solid var(--border-color);
+            border-radius: var(--border-radius); max-height: 200px; overflow-y: auto; width: 100%; z-index: 10;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-top: 2px;
+        }
+        .multiselect-dropdown.show { display: block; }
+        .multiselect-option { padding: 0.6rem var(--input-padding); cursor: pointer; font-size: 0.9rem; border-bottom: 1px solid var(--secondary-color); }
+        .multiselect-option:last-child { border-bottom: none; }
+        .multiselect-option:hover { background-color: var(--secondary-color); }
+        .multiselect-selected-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+        .multiselect-selected-item {
+            background-color: #e0e0e0; color: var(--text-color); padding: 0.3rem 0.6rem;
+            border-radius: 1rem; font-size: 0.8rem; display: flex; align-items: center;
+        }
+        .multiselect-remove-btn {
+            background: none; border: none; color: #6b778c; margin-left: 0.4rem; cursor: pointer;
+            padding: 0; font-size: 1.1rem; line-height: 1; font-weight: bold;
+        }
+        hr { grid-column: 1 / -1; border: none; border-top: 1px solid var(--border-color); margin: var(--spacing) 0; }
     </style>
 </head>
 <body>
-    <div id="app">
-        <h1>PRUEBA DEFINITIVA v2</h1>
-        <p>Selecciona un archivo .pdf o .docx para procesar.</p>
-        
-        <input type="file" id="cv-file" accept=".pdf,.doc,.docx">
-        
-        <button id="submit-btn">Procesar CV</button>
+    <div class="container">
+        <h1 id="main-title">Analizar CV</h1>
 
-        <pre id="resultado"></pre>
+        <form id="ats-form">
+            <div class="form-group full-width">
+                <label>Fuente del Candidato:</label>
+                <div class="input-group">
+                    <label><input type="radio" name="source_option" value="cv" checked> Subir CV (PDF/DOCX)</label>
+                    <label><input type="radio" name="source_option" value="linkedin"> URL de LinkedIn (Pública)</label>
+                </div>
+                <div id="cv-input-option" class="input-option active">
+                    <label for="cv-file">Seleccionar archivo:</label>
+                    <input type="file" id="cv-file" name="file" accept=".pdf,.doc,.docx">
+                </div>
+                <div id="linkedin-input-option" class="input-option">
+                    <label for="linkedin-url-input">Pegar URL:</label>
+                    <input type="url" id="linkedin-url-input" name="linkedin_url" placeholder="[https://linkedin.com/in/nombreusuario](https://linkedin.com/in/nombreusuario)">
+                </div>
+            </div>
+
+            <hr>
+
+             <h2>Datos del Candidato <span style="font-weight:normal; font-size: 0.8em;">(La IA rellenará estos campos después de analizar)</span></h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nombre_apellido">Nombre y Apellido *</label>
+                    <input type="text" id="nombre_apellido" name="nombre_apellido" required placeholder="Ej: Ana García López">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="Ej: ana.garcia@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Teléfono</label>
+                    <input type="text" id="phone" name="phone" placeholder="+34600112233">
+                </div>
+                <div class="form-group">
+                    <label for="location">Ubicación</label>
+                    <input type="text" id="location" name="location" placeholder="Ej: Madrid, España">
+                </div>
+                <div class="form-group full-width">
+                    <label for="linkedin_url">URL LinkedIn</label>
+                    <input type="url" id="linkedin_url" name="linkedin_url" placeholder="[https://linkedin.com/in/anagarcia/](https://linkedin.com/in/anagarcia/)">
+                </div>
+                <div class="form-group">
+                    <label for="current_company">Empresa Actual</label>
+                    <input type="text" id="current_company" name="current_company" placeholder="Ej: Tech Solutions Inc. o Freelance">
+                </div>
+                 <div class="form-group">
+                    <label for="skills">Skills (separado por comas)</label>
+                    <input type="text" id="skills" name="skills" placeholder="Ej: Java, Python, React...">
+                </div>
+                 <div class="form-group full-width">
+                     <label for="languages-multiselect">Idiomas</label>
+                     <div id="languages-multiselect" class="multiselect-container">
+                        <input type="text" class="multiselect-input" placeholder="Buscar o seleccionar idiomas...">
+                        <div class="multiselect-dropdown"></div>
+                        <div class="multiselect-selected-list"></div>
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender"></select>
+                </div>
+            </div>
+
+            <hr>
+
+            <h2>Información Adicional (Opcional)</h2>
+            <div class="form-grid">
+                 <div class="form-group">
+                    <label for="salary_expectation">Expectativa Salarial</label>
+                    <input type="text" id="salary_expectation" name="salary_expectation" placeholder="Ej: 50,000 EUR Anuales Brutos">
+                </div>
+                <div class="form-group">
+                    <label for="stage">Stage</label>
+                    <select id="stage" name="stage"></select>
+                </div>
+                <div class="form-group">
+                    <label for="resolution">Resolution</label>
+                    <select id="resolution" name="resolution"></select>
+                </div>
+                <div class="form-group">
+                    <label for="source">Source</label>
+                    <select id="source" name="source"></select>
+                </div>
+                 <div class="form-group"> <label for="rejection_reason">Rejection Reason</label>
+                    <select id="rejection_reason" name="rejection_reason"></select>
+                </div>
+                <div class="form-group full-width">
+                    <label for="short_notes">Notas Cortas</label>
+                    <textarea id="short_notes" name="short_notes" placeholder="Añade comentarios relevantes aquí..."></textarea>
+                </div>
+            </div>
+
+             <div class="button-group">
+                <button type="button" id="analyze-btn">1. Analizar con IA</button>
+                <button type="button" id="submit-btn" disabled>2. Enviar a Notion</button>
+            </div>
+
+            <div id="status-message" class="status-message" style="display: none;"></div>
+
+        </form>
     </div>
 
-    <script>
-        // --- IMPORTANTE: CONFIGURACIÓN ---
-        // Pega la URL de tu "motor" (Render) aquí
-       const API_URL = "https://mi-super-ats.onrender.com";
-        // ----------------------------------
+<script>
+    // --- CONFIGURACIÓN ---
+    const API_URL = "[https://mi-super-ats.onrender.com](https://mi-super-ats.onrender.com)"; // TU URL DE RENDER
+    // ---------------------
 
-        const fileInput = document.getElementById('cv-file');
-        const submitBtn = document.getElementById('submit-btn');
-        const resultadoBox = document.getElementById('resultado');
+    const form = document.getElementById('ats-form');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const statusMessage = document.getElementById('status-message');
+    const sourceOptions = document.querySelectorAll('input[name="source_option"]');
+    const cvInputOption = document.getElementById('cv-input-option');
+    const linkedinInputOption = document.getElementById('linkedin-input-option');
+    const cvFileInput = document.getElementById('cv-file');
+    const linkedinUrlInput = document.getElementById('linkedin-url-input');
+    const mainTitle = document.getElementById('main-title'); // Para el título
 
-        submitBtn.addEventListener('click', async () => {
-           
+    const fields = {
+        nombre_apellido: document.getElementById('nombre_apellido'),
+        email: document.getElementById('email'),
+        phone: document.getElementById('phone'),
+        location: document.getElementById('location'),
+        linkedin_url: document.getElementById('linkedin_url'),
+        current_company: document.getElementById('current_company'),
+        skills: document.getElementById('skills'),
+        salary_expectation: document.getElementById('salary_expectation'),
+        stage: document.getElementById('stage'),
+        resolution: document.getElementById('resolution'),
+        rejection_reason: document.getElementById('rejection_reason'),
+        source: document.getElementById('source'),
+        gender: document.getElementById('gender'),
+        short_notes: document.getElementById('short_notes'),
+    };
 
-            const file = fileInput.files[0];
+    let currentFileInfo = null;
+    let currentSourceType = 'cv';
+    let availableLanguages = [];
+    let selectedLanguages = [];
+
+    // --- Funciones Auxiliares ---
+    function showStatus(message, type = 'loading') { /* ... (igual que antes) ... */
+         statusMessage.textContent = message;
+         statusMessage.className = `status-message ${type}`; // Usa warning para duplicados
+         statusMessage.style.display = 'block';
+    }
+    function hideStatus() { /* ... (igual que antes) ... */ statusMessage.style.display = 'none'; }
+    function setButtonsState(loading = false, analyzed = false) {
+        analyzeBtn.disabled = loading;
+        submitBtn.disabled = loading || !analyzed; // Habilitar solo si se ha analizado y no está cargando
+        analyzeBtn.textContent = loading ? 'Analizando...' : '1. Analizar con IA';
+        submitBtn.textContent = loading ? 'Enviando...' : '2. Enviar a Notion';
+         // Cambiar estilo de botón submit si está habilitado
+         submitBtn.classList.toggle('button-secondary', submitBtn.disabled);
+    }
+    function populateSelect(selectElement, options) { /* ... (igual que antes) ... */
+        selectElement.innerHTML = '';
+        options.forEach(optionText => { // Renombrado a optionText para claridad
+            const opt = document.createElement('option');
+            // Usar el texto como valor, excepto para la opción vacía
+            opt.value = optionText;
+            opt.textContent = optionText === "" ? '--- Selecciona ---' : optionText;
+            selectElement.appendChild(opt);
+        });
+    }
+
+
+    // --- Lógica Multi-select Idiomas ---
+    const langContainer = document.getElementById('languages-multiselect');
+    const langInput = langContainer.querySelector('.multiselect-input');
+    const langDropdown = langContainer.querySelector('.multiselect-dropdown');
+    const langSelectedList = langContainer.querySelector('.multiselect-selected-list');
+
+    function renderLangDropdown(filter = '') { /* ... (igual que antes) ... */
+        langDropdown.innerHTML = '';
+        const filteredLangs = availableLanguages.filter(lang =>
+            lang.toLowerCase().includes(filter.toLowerCase()) && !selectedLanguages.includes(lang)
+        );
+        filteredLangs.forEach(lang => {
+            const optionDiv = document.createElement('div');
+            optionDiv.classList.add('multiselect-option');
+            optionDiv.textContent = lang;
+            optionDiv.dataset.value = lang;
+            optionDiv.addEventListener('click', () => selectLanguage(lang));
+            langDropdown.appendChild(optionDiv);
+        });
+        langDropdown.classList.toggle('show', filteredLangs.length > 0 || filter.length > 0); // Mostrar si hay filtro aunque no haya resultados
+    }
+    function renderSelectedLanguages() { /* ... (igual que antes) ... */
+         langSelectedList.innerHTML = '';
+        selectedLanguages.forEach(lang => {
+            const itemSpan = document.createElement('span');
+            itemSpan.classList.add('multiselect-selected-item');
+            itemSpan.textContent = lang;
+            const removeBtn = document.createElement('button');
+            removeBtn.classList.add('multiselect-remove-btn');
+            removeBtn.innerHTML = '&times;'; // Usar HTML entity para 'x'
+            removeBtn.type = 'button'; // Importante para no enviar formulario
+            removeBtn.title = `Quitar ${lang}`; // Accesibilidad
+            removeBtn.addEventListener('click', (e) => {
+                 e.stopPropagation(); // Evitar que el click se propague
+                 deselectLanguage(lang);
+             });
+            itemSpan.appendChild(removeBtn);
+            langSelectedList.appendChild(itemSpan);
+        });
+    }
+    function selectLanguage(lang) { /* ... (igual que antes) ... */
+        if (!selectedLanguages.includes(lang)) {
+            selectedLanguages.push(lang);
+            renderSelectedLanguages();
+            langInput.value = ''; // Limpiar input tras seleccionar
+            renderLangDropdown(); // Actualizar dropdown
+            langDropdown.classList.remove('show');
+             langInput.placeholder = "Buscar o seleccionar idiomas..."; // Reset placeholder
+        }
+    }
+     function deselectLanguage(lang) { /* ... (igual que antes) ... */
+         selectedLanguages = selectedLanguages.filter(l => l !== lang);
+         renderSelectedLanguages();
+         // Opcional: re-render dropdown si está abierto
+         if(langDropdown.classList.contains('show')) {
+             renderLangDropdown(langInput.value);
+         }
+     }
+
+    langInput.addEventListener('input', () => renderLangDropdown(langInput.value));
+    langInput.addEventListener('focus', () => renderLangDropdown(langInput.value));
+    langInput.addEventListener('keydown', (e) => { // Permitir seleccionar con Enter
+         if (e.key === 'Enter') {
+             e.preventDefault();
+             const firstOption = langDropdown.querySelector('.multiselect-option');
+             if (firstOption) {
+                 selectLanguage(firstOption.dataset.value);
+             }
+         }
+    });
+    document.addEventListener('click', (e) => { /* ... (igual que antes) ... */ if (!langContainer.contains(e.target)) { langDropdown.classList.remove('show'); } });
+
+    // --- Carga Inicial ---
+    async function loadInitialOptions() {
+        try {
+            showStatus('Cargando opciones...', 'loading');
+            const response = await fetch(`${API_URL}/api/options`);
+            if (!response.ok) throw new Error(`Error ${response.status} cargando opciones.`);
+            const options = await response.json();
+
+            populateSelect(fields.stage, options.STAGE || []);
+            populateSelect(fields.resolution, options.RESOLUTION || []);
+            populateSelect(fields.rejection_reason, options.REJECTION_REASON || []);
+            populateSelect(fields.source, options.SOURCE || []);
+            populateSelect(fields.gender, options.GENDER || []);
+
+            availableLanguages = options.LANGUAJE || [];
+            renderLangDropdown();
+            hideStatus();
+
+        } catch (error) {
+            showStatus(`Error crítico cargando opciones: ${error.message}. Recarga la página.`, 'error');
+            analyzeBtn.disabled = true; // Deshabilitar si no cargan opciones
+            submitBtn.disabled = true;
+        }
+    }
+
+    // --- Manejadores de Eventos ---
+    sourceOptions.forEach(radio => { /* ... (igual que antes) ... */
+         radio.addEventListener('change', (e) => {
+            currentSourceType = e.target.value;
+            cvInputOption.classList.toggle('active', currentSourceType === 'cv');
+            linkedinInputOption.classList.toggle('active', currentSourceType === 'linkedin');
+            if (currentSourceType === 'cv') linkedinUrlInput.value = '';
+            else cvFileInput.value = '';
+            currentFileInfo = null;
+            // Limpiar campos extraídos al cambiar fuente? Decisión de UX. Por ahora no.
+            // form.reset(); // Esto limpiaría TODO
+            // loadInitialOptions(); // Esto resetea dropdowns
+            submitBtn.disabled = true; // Deshabilitar submit al cambiar fuente
+            submitBtn.classList.add('button-secondary');
+            hideStatus();
+        });
+    });
+
+    analyzeBtn.addEventListener('click', async () => {
+        hideStatus();
+        setButtonsState(true, false); // Cargando, Aún no analizado
+        currentFileInfo = null;
+
+        const formData = new FormData();
+        let body = null;
+
+        if (currentSourceType === 'cv') {
+            const file = cvFileInput.files[0];
             if (!file) {
-                alert("Por favor, selecciona un archivo primero.");
+                showStatus('Por favor, selecciona un archivo CV.', 'error');
+                setButtonsState(false, false);
                 return;
             }
-
-            // Mostrar estado de carga
-            submitBtn.disabled = true;
-            submitBtn.textContent = "Procesando...";
-            resultadoBox.style.display = 'block';
-            resultadoBox.textContent = "Subiendo y analizando el CV... Esto puede tardar hasta un minuto.";
-
-            const formData = new FormData();
             formData.append('file', file);
+            body = formData;
+        } else {
+             const url = linkedinUrlInput.value.trim();
+            if (!url) {
+                showStatus('Por favor, introduce una URL de LinkedIn.', 'error');
+                setButtonsState(false, false);
+                return;
+            }
+             // Validar URL simple en frontend
+             try { new URL(url); } catch {
+                 showStatus('La URL de LinkedIn no parece válida.', 'error');
+                 setButtonsState(false, false);
+                 return;
+             }
+            formData.append('linkedin_url', url);
+            body = formData;
+        }
 
-            try {
-                // 1. Subir el archivo y obtener la vista previa
-                const response = await fetch(`${API_URL}/api/candidates/upload-cv`, {
-                    method: 'POST',
-                    body: formData,
-                });
+        try {
+            showStatus('Analizando con IA... Puede tardar unos segundos.', 'loading');
+            const response = await fetch(`${API_URL}/api/process`, { method: 'POST', body: body });
+            const data = await response.json();
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Error al subir el archivo.');
-                }
+            if (!response.ok) { throw new Error(data.detail || `Error del servidor: ${response.status}`); }
 
-                const previewData = await response.json();
-                resultadoBox.textContent = "Vista previa recibida. Confirmando candidato...";
+            const extracted = data.extracted_data || {};
+            fields.nombre_apellido.value = extracted.nombre_apellido || '';
+            fields.email.value = extracted.email || '';
+            fields.phone.value = extracted.phone || '';
+            fields.location.value = extracted.location || '';
+            fields.linkedin_url.value = extracted.linkedin_url || ''; // URL viene validada/limpiada
+            fields.current_company.value = extracted.current_company || '';
+            fields.skills.value = (extracted.skills || []).join(', ');
+            fields.gender.value = extracted.gender || ''; // Seleccionar el género extraído
 
-                // 2. Confirmar el candidato (aquí puedes añadir un paso de confirmación,
-                // pero para esta demo, lo confirmamos automáticamente)
-                const confirmResponse = await fetch(`${API_URL}/api/candidates/confirm-create`, {
+            selectedLanguages = extracted.languages || [];
+            renderSelectedLanguages(); // Renderizar idiomas preseleccionados
+
+            currentFileInfo = data.file_info;
+            currentSourceType = data.source_type; // Confirmar
+
+            let statusType = 'success';
+            let message = 'Análisis completado. Revisa y edita si es necesario antes de enviar.';
+            if (data.duplicate_info && data.duplicate_info.exists) {
+                statusType = 'warning'; // Cambiado a warning
+                message = `¡Atención! Email duplicado (${fields.email.value}). Revisa antes de enviar o envía igualmente.`;
+            }
+            showStatus(message, statusType);
+            setButtonsState(false, true); // No cargando, Analizado (habilita submit)
+
+        } catch (error) {
+            showStatus(`Error en el análisis: ${error.message}`, 'error');
+            console.error("Error detallado:", error);
+            setButtonsState(false, false); // No cargando, No analizado (deshabilita submit)
+        }
+    });
+
+    submitBtn.addEventListener('click', async () => {
+        if (!fields.nombre_apellido.value.trim()) {
+            showStatus('El campo "Nombre y Apellido" es obligatorio.', 'error');
+            fields.nombre_apellido.focus();
+            return;
+        }
+        hideStatus();
+        setButtonsState(true, true); // Cargando, Analizado
+
+        const candidatePayload = {
+            nombre_apellido: fields.nombre_apellido.value.trim(),
+            email: fields.email.value.trim() || null, // Enviar null si está vacío
+            phone: fields.phone.value.trim(),
+            location: fields.location.value.trim(),
+            linkedin_url: fields.linkedin_url.value.trim() || null, // Enviar null si está vacío
+            current_company: fields.current_company.value.trim(),
+            // Convertir skills de string a lista
+            skills: fields.skills.value ? fields.skills.value.split(',').map(s => s.trim()).filter(s => s) : [],
+            salary_expectation: fields.salary_expectation.value.trim(),
+            stage: fields.stage.value,
+            resolution: fields.resolution.value,
+            rejection_reason: fields.rejection_reason.value,
+            source: fields.source.value,
+            gender: fields.gender.value,
+            languages: selectedLanguages,
+            short_notes: fields.short_notes.value.trim(),
+            file_info: currentFileInfo,
+            source_type: currentSourceType
+        };
+
+        const callConfirmCreate = async (force = false) => {
+             try {
+                 showStatus('Enviando a Notion...', 'loading');
+                 const response = await fetch(`${API_URL}/api/candidates/confirm-create`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        candidate_data: previewData.candidate_data,
-                        file_info: previewData.file_info
+                        candidate_data: candidatePayload,
+                        force_create_duplicate: force
                     })
                 });
+                const data = await response.json();
 
-                if (!confirmResponse.ok) {
-                    const errorData = await confirmResponse.json();
-                    throw new Error(errorData.detail || 'Error al confirmar el candidato.');
+                 if (!response.ok) {
+                    if (response.status === 409) {
+                        if (confirm(`EMAIL DUPLICADO:\n${data.detail}\n\n¿Deseas crear el registro igualmente?`)) {
+                           await callConfirmCreate(true);
+                        } else {
+                           showStatus('Creación cancelada por duplicado.', 'warning'); // Cambiado a warning
+                           setButtonsState(false, true); // No cargando, Analizado (permitir reintentar)
+                        }
+                    } else {
+                        throw new Error(data.detail || `Error del servidor: ${response.status}`);
+                    }
+                 } else {
+                    showStatus(data.message || 'Candidato enviado a Notion con éxito.', 'success');
+                    if (data.notion_url) {
+                        window.open(data.notion_url, '_blank'); // Abrir Notion
+                    }
+                     // Limpiar campos clave para nuevo candidato
+                     fields.nombre_apellido.value = '';
+                     fields.email.value = '';
+                     fields.phone.value = '';
+                     fields.location.value = '';
+                     fields.linkedin_url.value = '';
+                     fields.current_company.value = '';
+                     fields.skills.value = '';
+                     fields.salary_expectation.value = ''; // Limpiar salario
+                     fields.short_notes.value = ''; // Limpiar notas
+                     cvFileInput.value = ''; // Limpiar input file
+                     linkedinUrlInput.value = ''; // Limpiar input URL
+                     currentFileInfo = null;
+                     selectedLanguages = []; renderSelectedLanguages(); // Limpiar idiomas seleccionados
+
+                     // Mantener Stage, Resolution, Source, Gender
+                     setButtonsState(false, false); // No cargando, No analizado (deshabilita submit hasta nuevo análisis)
                 }
 
-                const finalCandidate = await confirmResponse.json();
-                
-                // ¡Éxito!
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Procesar CV";
-                resultadoBox.textContent = "¡Candidato creado con éxito!\n\n" +
-                    `Nombre: ${finalCandidate.nombre_apellido}\n` +
-                    `Email: ${finalCandidate.email}\n` +
-                    `Notion URL: ${finalCandidate.notion_url}`;
-
             } catch (error) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Procesar CV";
-                resultadoBox.style.display = 'block';
-                resultadoBox.textContent = `Error: ${error.message}`;
+                showStatus(`Error al enviar a Notion: ${error.message}`, 'error');
+                console.error("Error detallado:", error);
+                setButtonsState(false, true); // No cargando, Analizado (permitir reintentar submit)
             }
-        });
-    </script>
+        };
+
+        await callConfirmCreate(false); // Llamada inicial
+
+    });
+
+    // --- Inicializar la página ---
+    document.addEventListener('DOMContentLoaded', () => {
+        loadInitialOptions();
+        setButtonsState(false, false); // Estado inicial: no cargando, no analizado
+        mainTitle.textContent = "Analizar CV"; // Corregir título
+    });
+
+</script>
 </body>
 </html>
