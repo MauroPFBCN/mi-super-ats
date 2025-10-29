@@ -7,6 +7,6 @@ httpx
 PyPDF2
 python-docx
 beautifulsoup4
-emergent
+emergent-llm
 gunicorn
 python-multipart
