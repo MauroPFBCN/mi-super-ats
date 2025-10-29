@@ -790,3 +790,84 @@ async def confirm_create_candidate(request: ConfirmCandidateRequest):
         if candidate_data.email and candidate_data.email.strip():
             exists, existing = await check_email_exists(candidate_data.email)
             if exists and not request.force_create_duplicate:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"El email {candidate_data.email} ya existe en la base de datos. Email duplicado detectado."
+                )
+        file_content = None
+        filename = None
+        if request.file_info and request.file_info.get("content_base64"):
+            file_content = base64.b64decode(request.file_info["content_base64"])
+            filename = request.file_info["filename"]
+        
+        notion_record_id, notion_url = await create_notion_record(
+            candidate_data, 
+            file_content, 
+            filename
+        )
+        candidate_response = CandidateResponse(
+            **candidate_data.dict(),
+            notion_record_id=notion_record_id,
+            notion_url=notion_url,
+            source_type="cv" if request.file_info else "linkedin"
+        )
+        candidate_dict = candidate_response.dict()
+        candidate_dict["created_at"] = candidate_dict["created_at"].isoformat()
+        if candidate_dict.get("email"):
+            candidate_dict["email"] = candidate_dict["email"].lower()
+        await db.candidates.insert_one(candidate_dict)
+        return candidate_response
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error confirmando candidato: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
+@api_router.get("/candidates", response_model=List[CandidateResponse])
+async def get_candidates():
+    try:
+        candidates = await db.candidates.find().sort("created_at", -1).to_list(100)
+        for candidate in candidates:
+            if isinstance(candidate["created_at"], str):
+                candidate["created_at"] = datetime.fromisoformat(candidate["created_at"])
+        return [CandidateResponse(**candidate) for candidate in candidates]
+    except Exception as e:
+        logging.error(f"Error obteniendo candidatos: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
+@api_router.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+@api_router.get("/health/notion")
+async def notion_health_check():
+    try:
+        headers = {
+            "Authorization": f"Bearer {os.environ.get('NOTION_API_TOKEN')}",
+            "Notion-Version": "2022-06-28"
+        }
+        database_id = os.environ.get('NOTION_DATABASE_ID')
+        url = f"https://api.notion.com/v1/databases/{database_id}"
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+        return {"status": "connected", "service": "notion"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Notion no disponible: {str(e)}"
+        )
+
+# Include router
+app.include_router(api_router)
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    client. Close()
