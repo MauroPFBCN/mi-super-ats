@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Babel - Procesador de CV</title>
+    <title>Mauro ATS - Procesador de CV</title>
     <style>
-        /* --- Estilos (iguales que la versión anterior, no es necesario copiarlos de nuevo si ya los tienes) --- */
+        /* --- Estilos (iguales que la versión anterior) --- */
         :root {
             --primary-color: #0052cc; /* Azul Babel */
             --secondary-color: #f4f5f7; /* Gris claro fondo */
@@ -67,7 +67,7 @@
         .multiselect-option { padding: 0.6rem var(--input-padding); cursor: pointer; font-size: 0.9rem; border-bottom: 1px solid var(--secondary-color); }
         .multiselect-option:last-child { border-bottom: none; }
         .multiselect-option:hover { background-color: var(--secondary-color); }
-        .multiselect-selected-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; min-height: 20px; /* Evita colapso */}
+        .multiselect-selected-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; min-height: 20px; }
         .multiselect-selected-item { background-color: #e0e0e0; color: var(--text-color); padding: 0.3rem 0.6rem; border-radius: 1rem; font-size: 0.8rem; display: flex; align-items: center; }
         .multiselect-remove-btn { background: none; border: none; color: #6b778c; margin-left: 0.4rem; cursor: pointer; padding: 0; font-size: 1.1rem; line-height: 1; font-weight: bold; }
         hr { grid-column: 1 / -1; border: none; border-top: 1px solid var(--border-color); margin: calc(var(--spacing) * 1.5) 0; }
@@ -126,32 +126,32 @@
                     <label for="skills">Skills (separado por comas)</label>
                     <input type="text" id="skills" name="skills" placeholder="Ej: Java, Python, React...">
                 </div>
-                </div>
+            </div>
 
             <hr>
 
              <h2>Información Adicional (Opcional)</h2>
             <div class="form-grid">
                  <div class="form-group">
-                    <label for="salary_expectation">Expectativa Salarial</label>
-                    <input type="text" id="salary_expectation" name="salary_expectation" placeholder="Ej: 50,000 EUR Anuales Brutos">
-                 </div>
-                 <div class="form-group">
                     <label for="stage">Stage</label>
                     <select id="stage" name="stage"></select>
-                </div>
+                 </div>
                  <div class="form-group">
                     <label for="resolution">Resolution</label>
                     <select id="resolution" name="resolution"></select>
                 </div>
                  <div class="form-group">
-                    <label for="source">Source</label>
-                    <select id="source" name="source"></select>
-                </div>
-                 <div class="form-group">
                     <label for="rejection_reason">Rejection Reason</label>
                     <select id="rejection_reason" name="rejection_reason"></select>
-                </div>
+                 </div>
+                 <div class="form-group">
+                     <label for="source">Source</label>
+                     <select id="source" name="source"></select>
+                 </div>
+                 <div class="form-group">
+                     <label for="salary_expectation">Expectativa Salarial</label>
+                     <input type="text" id="salary_expectation" name="salary_expectation" placeholder="Ej: 50,000 EUR Anuales Brutos">
+                 </div>
                 <div class="form-group">
                     <label for="gender">Gender</label>
                     <select id="gender" name="gender"></select>
@@ -182,23 +182,22 @@
 
 <script>
     // --- CONFIGURACIÓN ---
-    const API_URL = "[https://mi-super-ats.onrender.com](https://mi-super-ats.onrender.com)"; // TU URL DE RENDER
+    const API_URL = "[https://mi-super-ats.onrender.com](https://mi-super-ats.onrender.com)"; // TU URL DE RENDER VERIFICADA
     // ---------------------
 
     // Selectores y estado (igual que antes)
     const form = document.getElementById('ats-form');
     const analyzeBtn = document.getElementById('analyze-btn');
     const submitBtn = document.getElementById('submit-btn');
-    /* ... (resto de selectores igual) ... */
-     const statusMessage = document.getElementById('status-message');
+    const statusMessage = document.getElementById('status-message');
     const sourceOptions = document.querySelectorAll('input[name="source_option"]');
     const cvInputOption = document.getElementById('cv-input-option');
     const linkedinInputOption = document.getElementById('linkedin-input-option');
     const cvFileInput = document.getElementById('cv-file');
     const linkedinUrlInput = document.getElementById('linkedin-url-input');
-    const mainTitle = document.getElementById('main-title'); // Para el título
+    const mainTitle = document.getElementById('main-title');
 
-    const fields = {
+    const fields = { /* ... (igual que antes) ... */
         nombre_apellido: document.getElementById('nombre_apellido'),
         email: document.getElementById('email'),
         phone: document.getElementById('phone'),
@@ -222,7 +221,6 @@
     const langInput = langContainer.querySelector('.multiselect-input');
     const langDropdown = langContainer.querySelector('.multiselect-dropdown');
     const langSelectedList = langContainer.querySelector('.multiselect-selected-list');
-
 
     // Funciones Auxiliares (igual que antes)
     function showStatus(message, type = 'loading') { /* ... */
@@ -282,7 +280,7 @@
     }
     function selectLanguage(lang) { /* ... */
         if (!selectedLanguages.includes(lang)) {
-            selectedLanguages.push(lang); selectedLanguages.sort(); // Mantener ordenado
+            selectedLanguages.push(lang); selectedLanguages.sort();
             renderSelectedLanguages(); langInput.value = ''; renderLangDropdown(); langDropdown.classList.remove('show');
             langInput.placeholder = "Buscar o seleccionar idiomas...";
         }
@@ -302,13 +300,20 @@
      });
     document.addEventListener('click', (e) => { /* ... (cerrar al click fuera) ... */ if (!langContainer.contains(e.target)) { langDropdown.classList.remove('show'); } });
 
-
     // Carga Inicial (igual que antes)
     async function loadInitialOptions() { /* ... */
          try {
             showStatus('Cargando opciones...', 'loading');
-            const response = await fetch(`${API_URL}/api/options`); // Asegúrate que API_URL es correcta
-            if (!response.ok) throw new Error(`Error ${response.status} cargando opciones.`);
+            const response = await fetch(`${API_URL}/api/options`);
+            if (!response.ok) {
+                 // Intentar obtener más detalles del error 404 si es posible
+                 let errorDetail = `Error ${response.status} (${response.statusText}) cargando opciones.`;
+                 try {
+                     const errorData = await response.json();
+                     errorDetail = errorData.detail || errorDetail;
+                 } catch (e) { /* Ignorar si no hay JSON */}
+                 throw new Error(errorDetail);
+             }
             const options = await response.json();
 
             populateSelect(fields.stage, options.STAGE || []);
@@ -318,13 +323,12 @@
             populateSelect(fields.gender, options.GENDER || []);
 
             availableLanguages = options.LANGUAJE || [];
-            // availableLanguages.sort(); // Ya vienen ordenados del backend
             renderLangDropdown();
             hideStatus();
 
         } catch (error) {
             showStatus(`Error crítico cargando opciones: ${error.message}. Recarga la página.`, 'error');
-            console.error("Error fetching options:", error); // Añadir log de consola
+            console.error("Error fetching options:", error);
             analyzeBtn.disabled = true; submitBtn.disabled = true;
         }
     }
@@ -337,13 +341,12 @@
             linkedinInputOption.classList.toggle('active', currentSourceType === 'linkedin');
             if (currentSourceType === 'cv') linkedinUrlInput.value = ''; else cvFileInput.value = '';
             currentFileInfo = null;
-            // Resetear campos extraídos y estado al cambiar fuente
             Object.values(fields).forEach(field => {
                  if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') field.value = '';
                  else if (field.tagName === 'SELECT') field.selectedIndex = 0;
             });
-            selectedLanguages = []; renderSelectedLanguages(); // Limpiar idiomas
-            setButtonsState(false, false); // Deshabilitar botones
+            selectedLanguages = []; renderSelectedLanguages();
+            setButtonsState(false, false);
             hideStatus();
         });
      });
@@ -380,7 +383,7 @@
             fields.gender.value = extracted.gender || ''; // Seleccionar el género extraído si existe
 
             selectedLanguages = extracted.languages || [];
-            selectedLanguages.sort(); // Ordenar los preseleccionados
+            selectedLanguages.sort();
             renderSelectedLanguages();
 
             currentFileInfo = data.file_info;
@@ -448,7 +451,6 @@
                      fields.salary_expectation.value = ''; fields.short_notes.value = '';
                      cvFileInput.value = ''; linkedinUrlInput.value = ''; currentFileInfo = null;
                      selectedLanguages = []; renderSelectedLanguages();
-                     // Mantener dropdowns Stage, etc.
                      setButtonsState(false, false); // Resetear botones
                 }
             } catch (error) {
