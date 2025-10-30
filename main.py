@@ -1,4 +1,4 @@
-# === INICIO main.py (Versión 5.7 - Corregido 'https' y prompt) ===
+# === INICIO main.py (Versión 5.8 - Corregido typo 'api_gitor') ===
 import os
 import logging
 import io
@@ -85,12 +85,9 @@ class ExtractedData(BaseModel):
             clean_url = match.group(1)
             if not clean_url.endswith('/'): clean_url += '/'
             try:
-                # --- ¡AQUÍ ESTABA EL ERROR! Corregido de "httpss" a "https" ---
                 return HttpUrl(clean_url, scheme="https")
             except Exception:
-                logger.warning(f"URL LinkedIn limpiada ({clean_url}) falló validación Pydantic.")
                 return None
-        logger.warning(f"URL proporcionada ({v}) no parece ser un perfil de LinkedIn válido.")
         return None
 
     @validator('nombre_apellido', pre=True)
@@ -200,19 +197,18 @@ async def extract_data_with_ai(text_content: str) -> ExtractedData:
     logger.info("Extracción IA (Prompt v5.7)...")
     linkedin_url_direct = await extract_linkedin_from_text_robust(text_content)
     
-    # --- PROMPT MEJORADO ---
     prompt = f"""
     Eres un asistente experto en RRHH extrayendo información de CVs/LinkedIn. Devuelve un JSON:
     TEXTO:
     ```{text_content[:7000]}```
     CAMPOS (usa "" o [] si vacío):
-    - nombre_apellido: Nombre completo. EXCLUYE títulos (Sr., Dr., Lic.).
+    - nombre_apellido: Nombre completo SIN títulos (Sr., Dr., Lic.).
     - email: Email principal.
     - phone: Teléfono principal limpio (+[prefijo][número] si es posible, si no solo dígitos).
     - location: Ciudad y País actual. Formato: "Ciudad, País". (ej: "Barcelona, Spain"). Busca esto activamente.
     - linkedin_url: URL COMPLETA (https://linkedin.com/in/...). Busca links INCUSTADOS y también texto plano. Prioriza la URL pre-detectada si es válida. Limpia params (?trk=...).
     - current_company: Empresa más reciente ("Presente", "Actual"). Si autónomo -> "Freelance". Solo nombre empresa.
-    - skills: Lista MAX 8 skills/roles clave (["Java", "React", "AWS", "Project Management"]). Generaliza puestos.
+    - skills: Lista MAX 8 skills/roles clave (["Java", "React", "AWS", "Project Management", "SQL"]). Generaliza puestos.
     - languages: Lista MAX 5 idiomas con nivel MCER si posible (["Spanish C2 Native", "English B2"]).
     - gender: Infiere "Male" o "Female" del nombre. Si ambiguo -> "".
     URL PRE-DETECTADA: {linkedin_url_direct or "Ninguna"}
@@ -283,7 +279,7 @@ async def create_notion_page(candidate_data: CandidateDataInput) -> tuple[str, s
     logger.info(f"Creando Notion: {candidate_data.nombre_apellido}")
     headers = {"Authorization": f"Bearer {NOTION_API_TOKEN}", "Content-Type": "application/json", "Notion-Version": "2022-06-28"}
     properties = {"Nombre y Apellido": {"title": [{"text": {"content": candidate_data.nombre_apellido or "Nombre no extraído"}}]}}
-    data_dict = candidate_data.dict(exclude_unset=True) # Usar exclude_unset para no enviar campos vacíos si no se rellenaron
+    data_dict = candidate_data.dict(exclude_unset=True)
     if data_dict.get("email"): properties["Email"] = {"email": str(data_dict["email"])}
     if data_dict.get("phone"): properties["Phone"] = {"phone_number": data_dict["phone"]}
     if data_dict.get("location"): properties["LOCATION"] = {"rich_text": [{"text": {"content": data_dict["location"]}}]}
@@ -334,7 +330,8 @@ async def get_notion_options_endpoint_v3():
         else: options[key] = values
     return options
 
-@api_gitor.post("/process", response_model=Dict)
+# --- ¡CAMBIO CLAVE! Corregido 'api_gitor' a 'api_router' ---
+@api_router.post("/process", response_model=Dict)
 async def process_source_endpoint_v3(file: Optional[UploadFile] = File(None), linkedin_url: Optional[HttpUrl] = Form(None)):
     if not file and not linkedin_url: raise HTTPException(status_code=400, detail="Proporciona CV o URL.")
     if file and linkedin_url: raise HTTPException(status_code=400, detail="Proporciona solo CV o URL.")
@@ -391,13 +388,13 @@ async def confirm_create_endpoint_v4(request: ConfirmCreateRequest):
     return ConfirmCreateResponse(id=mongo_id, notion_record_id=notion_id, notion_url=notion_url, message="Candidato creado con éxito.")
 
 # --- Inicialización de la App ---
-app = FastAPI( title="ATS Babel - CV Processor v5.7", version="5.7.0") # Incremento versión
+app = FastAPI( title="ATS Babel - CV Processor v5.8", version="5.8.0") # Incremento versión
 
 app.add_middleware( CORSMiddleware, allow_origins=CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.include_router(api_router) # <-- Incluir el router SIN prefijo
 
 @app.get("/", include_in_schema=False)
-async def root_v5_7(): return {"message": "ATS API v5.7 running."} # Actualizar versión
+async def root_v5_8(): return {"message": "ATS API v5.8 running."} # Actualizar versión
 
 @app.on_event("startup")
 async def startup_event_v3():
@@ -415,7 +412,7 @@ async def startup_event_v3():
          logger.error("MongoDB no configurado (MONGO_URL/DB_NAME).")
 
 @app.on_event("shutdown")
-async def shutdown_db_client_v5_7(): # Renombrado
+async def shutdown_db_client_v5_8(): # Renombrado
     if mongo_client: mongo_client.close(); logger.info("Conexión MongoDB cerrada.")
 
 # === FIN main.py ===
