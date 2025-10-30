@@ -103,6 +103,15 @@ class ExtractedData(BaseModel):
          if v.lower() in ["freelance", "contractor", "autonomo", "autónomo", "self-employed"]: return "Freelance"
          return v.strip()
 
+    # --- ¡NUEVO VALIDADOR AÑADIDO! ---
+    @validator('email', pre=True)
+    def empty_str_to_none_email(cls, v):
+        if v == "":
+            return None
+        return v
+    # --- FIN DEL NUEVO VALIDADOR ---
+
+
 class CandidateDataInput(BaseModel):
     nombre_apellido: str = Field(..., min_length=1)
     email: Optional[EmailStr] = None
@@ -121,6 +130,15 @@ class CandidateDataInput(BaseModel):
     short_notes: Optional[str] = ""
     file_info: Optional[Dict[str, Any]] = None
     source_type: str
+
+    # --- ¡VALIDADORES AÑADIDOS PARA ESTE MODELO TAMBIÉN! ---
+    @validator('email', 'linkedin_url', pre=True)
+    def empty_str_to_none(cls, v):
+        if v == "":
+            return None
+        return v
+    # --- FIN DE LOS VALIDADORES ---
+
 
 class ConfirmCreateRequest(BaseModel):
     candidate_data: CandidateDataInput
@@ -225,7 +243,10 @@ async def extract_data_with_ai(text_content: str) -> ExtractedData:
         except json.JSONDecodeError as json_err:
              logger.error(f"IA devolvió JSON inválido: {json_err}. Respuesta: {json_response}")
              raise HTTPException(status_code=500, detail="Respuesta IA inválida (JSON).") from json_err
-        extracted = ExtractedData(**data)
+        
+        # Validación de Pydantic ocurrirá aquí, con el nuevo validador de email
+        extracted = ExtractedData(**data) 
+        
         if not extracted.linkedin_url and linkedin_url_direct:
             validated_direct_url = ExtractedData(linkedin_url=linkedin_url_direct).linkedin_url
             if validated_direct_url: extracted.linkedin_url = validated_direct_url; logger.info("Usando URL LinkedIn pre-detectada.")
@@ -279,7 +300,9 @@ async def create_notion_page(candidate_data: CandidateDataInput) -> tuple[str, s
     logger.info(f"Creando Notion: {candidate_data.nombre_apellido}")
     headers = {"Authorization": f"Bearer {NOTION_API_TOKEN}", "Content-Type": "application/json", "Notion-Version": "2022-06-28"}
     properties = {"Nombre y Apellido": {"title": [{"text": {"content": candidate_data.nombre_apellido or "Nombre no extraído"}}]}}
-    data_dict = candidate_data.dict(exclude_unset=True)
+    data_dict = candidate_data.dict(exclude_unset=True) # Excluye campos que son None
+    
+    # Mapeo cuidadoso, solo añadir si el valor existe (no es None)
     if data_dict.get("email"): properties["Email"] = {"email": str(data_dict["email"])}
     if data_dict.get("phone"): properties["Phone"] = {"phone_number": data_dict["phone"]}
     if data_dict.get("location"): properties["LOCATION"] = {"rich_text": [{"text": {"content": data_dict["location"]}}]}
@@ -294,6 +317,7 @@ async def create_notion_page(candidate_data: CandidateDataInput) -> tuple[str, s
     if data_dict.get("gender") in NOTION_OPTIONS["GENDER"]: properties["Gender"] = {"select": {"name": data_dict["gender"]}}
     if data_dict.get("skills"): valid_skills = [s for s in data_dict["skills"] if s][:10]; properties["Skills"] = {"multi_select": [{"name": s} for s in valid_skills]}
     if data_dict.get("languages"): valid_langs = [l for l in data_dict["languages"] if l in NOTION_OPTIONS["LANGUAJE"]]; properties["LANGUAJE"] = {"multi_select": [{"name": l} for l in valid_langs]}
+    
     if candidate_data.file_info and candidate_data.file_info.get("content_base64"):
         logger.info("Procesando adjunto Notion...")
         try:
@@ -304,6 +328,7 @@ async def create_notion_page(candidate_data: CandidateDataInput) -> tuple[str, s
             if file_url: properties["ATTACHMENT"] = { "files": [{"type": "external", "name": filename, "external": {"url": file_url}}] }; logger.info(f"ATTACHMENT añadido: {filename}")
             else: logger.warning(f"No URL para adjunto {filename}.")
         except Exception as e: logger.error(f"Error procesando adjunto: {e}")
+    
     payload = {"parent": {"database_id": NOTION_DATABASE_ID}, "properties": properties}
     try:
         async with httpx.AsyncClient(timeout=45.0) as client:
@@ -330,7 +355,6 @@ async def get_notion_options_endpoint_v3():
         else: options[key] = values
     return options
 
-# --- ¡CAMBIO CLAVE! Corregido 'api_gitor' a 'api_router' ---
 @api_router.post("/process", response_model=Dict)
 async def process_source_endpoint_v3(file: Optional[UploadFile] = File(None), linkedin_url: Optional[HttpUrl] = Form(None)):
     if not file and not linkedin_url: raise HTTPException(status_code=400, detail="Proporciona CV o URL.")
@@ -388,13 +412,13 @@ async def confirm_create_endpoint_v4(request: ConfirmCreateRequest):
     return ConfirmCreateResponse(id=mongo_id, notion_record_id=notion_id, notion_url=notion_url, message="Candidato creado con éxito.")
 
 # --- Inicialización de la App ---
-app = FastAPI( title="ATS Babel - CV Processor v5.8", version="5.8.0") # Incremento versión
+app = FastAPI( title="ATS Babel - CV Processor v5.9", version="5.9.0") # Incremento versión
 
 app.add_middleware( CORSMiddleware, allow_origins=CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.include_router(api_router) # <-- Incluir el router SIN prefijo
 
 @app.get("/", include_in_schema=False)
-async def root_v5_8(): return {"message": "ATS API v5.8 running."} # Actualizar versión
+async def root_v5_9(): return {"message": "ATS API v5.9 running."} # Actualizar versión
 
 @app.on_event("startup")
 async def startup_event_v3():
@@ -412,7 +436,7 @@ async def startup_event_v3():
          logger.error("MongoDB no configurado (MONGO_URL/DB_NAME).")
 
 @app.on_event("shutdown")
-async def shutdown_db_client_v5_8(): # Renombrado
+async def shutdown_db_client_v5_9(): # Renombrado
     if mongo_client: mongo_client.close(); logger.info("Conexión MongoDB cerrada.")
 
 # === FIN main.py ===
