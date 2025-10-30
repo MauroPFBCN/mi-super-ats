@@ -82,7 +82,7 @@
                 </div>
                 <div id="linkedin-input-option" class="input-option">
                     <label for="linkedin-url-input">Pegar URL:</label>
-                    <input type="url" id="linkedin-url-input" name="linkedin_url" placeholder="[https://linkedin.com/in/nombreusuario](https://linkedin.com/in/nombreusuario)">
+                    <input type="url" id="linkedin-url-input" name="linkedin_url" placeholder="https://linkedin.com/in/nombreusuario">
                 </div>
             </div>
 
@@ -108,7 +108,7 @@
                 </div>
                 <div class="form-group full-width">
                     <label for="linkedin_url">URL LinkedIn</label>
-                    <input type="url" id="linkedin_url" name="linkedin_url" placeholder="[https://linkedin.com/in/anagarcia/](https://linkedin.com/in/anagarcia/)">
+                    <input type="url" id="linkedin_url" name="linkedin_url" placeholder="https://linkedin.com/in/anagarcia/">
                 </div>
                 <div class="form-group">
                     <label for="current_company">Empresa Actual</label>
@@ -137,8 +137,8 @@
                     <select id="rejection_reason" name="rejection_reason"></select>
                  </div>
                  <div class="form-group">
-                    <label for="source">Source</label>
-                    <select id="source" name="source"></select>
+                     <label for="source">Source</label>
+                     <select id="source" name="source"></select>
                  </div>
                  <div class="form-group">
                      <label for="salary_expectation">Expectativa Salarial</label>
@@ -148,7 +148,7 @@
                     <label for="gender">Gender</label>
                     <select id="gender" name="gender"></select>
                 </div>
-                 <div class="form-group full-width">
+                <div class="form-group full-width">
                      <label for="languages-multiselect">Idiomas</label>
                      <div id="languages-multiselect" class="multiselect-container">
                         <input type="text" class="multiselect-input" placeholder="Buscar o seleccionar idiomas...">
@@ -156,7 +156,7 @@
                         <div class="multiselect-selected-list"></div>
                     </div>
                 </div>
-                 <div class="form-group full-width">
+                <div class="form-group full-width">
                     <label for="short_notes">Notas Cortas</label>
                     <textarea id="short_notes" name="short_notes" placeholder="Añade comentarios relevantes aquí..."></textarea>
                 </div>
@@ -174,8 +174,7 @@
 
 <script>
     // --- CONFIGURACIÓN ---
-    // Quitamos /api/ de todas las llamadas fetch
-    const API_URL = "[https://mi-super-ats.onrender.com](https://mi-super-ats.onrender.com)"; // TU URL DE RENDER VERIFICADA
+    const API_URL = "https://mi-super-ats.onrender.com"; // TU URL DE RENDER VERIFICADA
     // ---------------------
 
     // Selectores y estado
@@ -253,7 +252,7 @@
             optionDiv.addEventListener('click', () => selectLanguage(lang));
             langDropdown.appendChild(optionDiv);
         });
-        langDropdown.classList.toggle('show', filteredLangs.length > 0 || (filter.length > 0 && filteredLangs.length === 0)); // Mostrar "no results" si se escribe
+        langDropdown.classList.toggle('show', filteredLangs.length > 0 || (filter.length > 0 && filteredLangs.length === 0));
         if (filter.length > 0 && filteredLangs.length === 0) {
              const noResult = document.createElement('div');
              noResult.classList.add('multiselect-option');
@@ -294,7 +293,7 @@
     langInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
              e.preventDefault();
-             const firstOption = langDropdown.querySelector('.multiselect-option[data-value]'); // Asegurar que sea una opción real
+             const firstOption = langDropdown.querySelector('.multiselect-option[data-value]');
              if (firstOption) { selectLanguage(firstOption.dataset.value); }
          }
      });
@@ -306,6 +305,7 @@
             showStatus('Cargando opciones...', 'loading');
             // --- LLAMADA API CORREGIDA (sin /api/) ---
             const response = await fetch(`${API_URL}/options`);
+            // ----------------------------------------
             if (!response.ok) {
                  let errorDetail = `Error ${response.status} (${response.statusText}) cargando opciones.`;
                  try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) {}
@@ -336,11 +336,11 @@
             linkedinInputOption.classList.toggle('active', currentSourceType === 'linkedin');
             if (currentSourceType === 'cv') linkedinUrlInput.value = ''; else cvFileInput.value = '';
             currentFileInfo = null;
-            // Limpiar campos extraídos al cambiar fuente
-            fields.nombre_apellido.value = ''; fields.email.value = ''; fields.phone.value = '';
-            fields.location.value = ''; fields.linkedin_url.value = ''; fields.current_company.value = '';
-            fields.skills.value = '';
-            selectedLanguages = []; renderSelectedLanguages(); // Limpiar idiomas
+            Object.values(fields).forEach(field => {
+                 if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') field.value = '';
+                 else if (field.tagName === 'SELECT') field.selectedIndex = 0;
+            });
+            selectedLanguages = []; renderSelectedLanguages();
             setButtonsState(false, false);
             hideStatus();
         });
@@ -365,6 +365,7 @@
             showStatus('Analizando con IA...', 'loading');
             // --- LLAMADA API CORREGIDA (sin /api/) ---
             const response = await fetch(`${API_URL}/process`, { method: 'POST', body: body });
+            // ----------------------------------------
             const data = await response.json();
             if (!response.ok) { throw new Error(data.detail || `Error del servidor: ${response.status}`); }
 
@@ -376,12 +377,10 @@
             fields.linkedin_url.value = extracted.linkedin_url || '';
             fields.current_company.value = extracted.current_company || '';
             fields.skills.value = (extracted.skills || []).join(', ');
-            // NO sobrescribir el dropdown de género si el usuario ya seleccionó uno
             if (fields.gender.value === "") {
                  fields.gender.value = extracted.gender || '';
             }
 
-            // Preseleccionar idiomas (añadir, no reemplazar los ya seleccionados por el usuario)
             const newLangs = extracted.languages || [];
             newLangs.forEach(lang => {
                  if (availableLanguages.includes(lang) && !selectedLanguages.includes(lang)) {
@@ -401,7 +400,7 @@
                 message = `EMAIL DUPLICADO (${fields.email.value}). Revisa/envía igualmente.`;
             }
             showStatus(message, statusType);
-            setButtonsState(false, true); // Habilitar submit
+            setButtonsState(false, true);
 
         } catch (error) {
             showStatus(`Error análisis: ${error.message}`, 'error');
@@ -439,6 +438,7 @@
                  showStatus('Enviando a Notion...', 'loading');
                  // --- LLAMADA API CORREGIDA (sin /api/) ---
                  const response = await fetch(`${API_URL}/candidates/confirm-create`, {
+                 // ----------------------------------------
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ candidate_data: candidatePayload, force_create_duplicate: force })
                 });
@@ -461,12 +461,13 @@
                      fields.stage.selectedIndex = 0; fields.resolution.selectedIndex = 0; fields.rejection_reason.selectedIndex = 0;
                      fields.source.selectedIndex = 0; fields.gender.selectedIndex = 0;
                      
-                     setButtonsState(false, false); // Resetear botones
+                     setButtonsState(false, false);
                 }
             } catch (error) {
                 showStatus(`Error envío Notion: ${error.message}`, 'error');
                 console.error("Error detallado envío:", error);
-                setButtonsState(false, true); // Permitir reintento
+                setButtonsState(false, true);
+Posso ajudá-lo a analisar esse código ou a fazer alguma modificação? Por favor, me diga o que você precisa.
             }
         };
         await callConfirmCreate(false); // Llamada inicial
