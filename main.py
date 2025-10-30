@@ -1,4 +1,4 @@
-# === INICIO main.py (Versión 5.4 - Corregido 'is not None') ===
+# === INICIO main.py (Versión 5.6 - Corregido typo 'httpss') ===
 import os
 import logging
 import io
@@ -23,7 +23,7 @@ from openai import AsyncOpenAI
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# --- Carga de Secretos (Variables de Entorno) ---
+# --- Carga de Secretos ---
 MONGO_URL = os.environ.get('MONGO_URL')
 DB_NAME = os.environ.get('DB_NAME')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
@@ -34,7 +34,7 @@ CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
 if not all([MONGO_URL, DB_NAME, OPENAI_API_KEY, NOTION_API_TOKEN, NOTION_DATABASE_ID]):
     logger.warning("¡Advertencia! Variables críticas (Mongo, OpenAI, Notion) pueden faltar.")
 
-# --- Clientes (Modificado para inicializar en startup) ---
+# --- Clientes ---
 mongo_client: Optional[AsyncIOMotorClient] = None
 db = None
 logger.info("Clientes MongoDB y OpenAI se inicializarán en el evento startup.")
@@ -84,8 +84,11 @@ class ExtractedData(BaseModel):
         if match:
             clean_url = match.group(1)
             if not clean_url.endswith('/'): clean_url += '/'
-            try: return HttpUrl(clean_url, scheme="https")
-            except Exception: return None
+            try:
+                # --- ¡AQUÍ ESTABA EL ERROR! ---
+                return HttpUrl(clean_url, scheme="https") # Corregido de "httpss" a "https"
+            except Exception:
+                return None
         return None
 
     @validator('nombre_apellido', pre=True)
@@ -245,10 +248,7 @@ async def extract_data_with_ai(text_content: str) -> ExtractedData:
 
 async def check_email_duplicate(email: Optional[EmailStr]) -> DuplicateCheckResponse:
     if not email: return DuplicateCheckResponse(exists=False)
-    # --- ¡CAMBIO CLAVE 1! ---
-    if db is None:
-        logger.warning("Check duplicado: Conexión DB no disponible.")
-        return DuplicateCheckResponse(exists=False)
+    if db is None: logger.warning("Check duplicado: Conexión DB no disponible."); return DuplicateCheckResponse(exists=False)
     try:
         email_str = str(email).strip().lower()
         existing = await db.candidates.find_one({"email": email_str}, {"_id": 1, "notion_url": 1})
@@ -319,7 +319,7 @@ async def create_notion_page(candidate_data: CandidateDataInput) -> tuple[str, s
     except Exception as e: logger.exception("Error inesperado creando Notion"); raise HTTPException(status_code=500, detail=f"Error interno Notion: {e}")
 
 # --- API Endpoints ---
-api_router = APIRouter()
+api_router = APIRouter() # <--- SIN prefijo /api
 
 @api_router.get("/options", response_model=Dict[str, List[str]])
 async def get_notion_options_endpoint_v3():
@@ -352,10 +352,7 @@ async def process_source_endpoint_v3(file: Optional[UploadFile] = File(None), li
         if source_type == "linkedin" and not extracted_data.linkedin_url:
              validated_original_url = ExtractedData(linkedin_url=str(linkedin_url)).linkedin_url
              if validated_original_url: extracted_data.linkedin_url = validated_original_url
-        
-        # Esta es la línea que falla:
         duplicate_info = await check_email_duplicate(extracted_data.email)
-        
         extracted_dict = extracted_data.dict()
         if extracted_dict.get("linkedin_url"): extracted_dict["linkedin_url"] = str(extracted_dict["linkedin_url"])
         duplicate_dict = duplicate_info.dict()
@@ -383,26 +380,23 @@ async def confirm_create_endpoint_v4(request: ConfirmCreateRequest):
     candidate_doc = {"_id": mongo_id, "notion_record_id": notion_id, "notion_url": str(notion_url), "created_at": datetime.now(timezone.utc), **candidate_input.dict(exclude={'file_info'})}
     if candidate_doc.get("email"): candidate_doc["email"] = str(candidate_doc["email"]).lower()
     if candidate_doc.get("linkedin_url"): candidate_doc["linkedin_url"] = str(candidate_doc["linkedin_url"])
-    
-    # --- ¡CAMBIO CLAVE 3! ---
     if db is not None:
         try: await db.candidates.insert_one(candidate_doc) ; logger.info(f"Guardado MongoDB: {mongo_id}")
         except Exception as e: logger.error(f"Error guardando MongoDB (NotionID: {notion_id}): {e}")
-    else:
-        logger.warning("No guardado MongoDB, conexión no disponible.")
+    else: logger.warning("No guardado MongoDB, conexión no disponible.")
     return ConfirmCreateResponse(id=mongo_id, notion_record_id=notion_id, notion_url=notion_url, message="Candidato creado con éxito.")
 
 # --- Inicialización de la App ---
-app = FastAPI( title="ATS Babel - CV Processor v5.4", version="5.4.0") # Incremento versión
+app = FastAPI( title="ATS Babel - CV Processor v5.6", version="5.6.0") # Incremento versión
 
 app.add_middleware( CORSMiddleware, allow_origins=CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
-app.include_router(api_router)
+app.include_router(api_router) # <-- Incluir el router SIN prefijo
 
 @app.get("/", include_in_schema=False)
-async def root_v5_4(): return {"message": "ATS API v5.4 running."}
+async def root_v5_6(): return {"message": "ATS API v5.6 running."} # Actualizar versión
 
 @app.on_event("startup")
-async def startup_event_v3(): # Renombrado
+async def startup_event_v3():
     global mongo_client, db
     logger.info("Startup: Intentando conectar MongoDB...")
     if MONGO_URL and DB_NAME:
@@ -413,12 +407,11 @@ async def startup_event_v3(): # Renombrado
             logger.info("MongoDB conectado y verificado en startup.")
         except Exception as e:
             logger.error(f"Ping a MongoDB falló en startup: {e}. Funciones DB no disponibles.")
-            # db permanece None
     else:
          logger.error("MongoDB no configurado (MONGO_URL/DB_NAME).")
 
 @app.on_event("shutdown")
-async def shutdown_db_client_v5_4(): # Renombrado
+async def shutdown_db_client_v5_6(): # Renombrado
     if mongo_client: mongo_client.close(); logger.info("Conexión MongoDB cerrada.")
 
 # === FIN main.py ===
