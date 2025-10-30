@@ -1,4 +1,4 @@
-# === INICIO main.py (Versión 6.0 - Corregidos 'api_gitor', 'httpss' y validadores) ===
+# === INICIO main.py (Versión 6.1 - Re-verificado y Corregido) ===
 import os
 import logging
 import io
@@ -106,7 +106,7 @@ class ExtractedData(BaseModel):
          if v.lower() in ["freelance", "contractor", "autonomo", "autónomo", "self-employed"]: return "Freelance"
          return v.strip()
 
-    # --- ¡VALIDADOR AÑADIDO! ---
+    # --- ¡VALIDADOR CORREGIDO! ---
     @validator('email', pre=True)
     def empty_str_to_none_email(cls, v):
         if v == "":
@@ -134,7 +134,7 @@ class CandidateDataInput(BaseModel):
     file_info: Optional[Dict[str, Any]] = None
     source_type: str
 
-    # --- ¡VALIDADORES AÑADIDOS! ---
+    # --- ¡VALIDADORES CORREGIDOS! ---
     @validator('email', 'linkedin_url', pre=True)
     def empty_str_to_none(cls, v):
         if v == "":
@@ -322,7 +322,6 @@ async def create_notion_page(candidate_data: CandidateDataInput) -> tuple[str, s
             filename = candidate_data.file_info["filename"]
             logger.info(f"Adjunto: {filename}, Size: {len(file_content)} bytes")
             file_url = await upload_cv_to_external_service(file_content, filename)
-            # --- ¡VALIDACIÓN AÑADIDA! ---
             if file_url and file_url.startswith("http"): 
                 properties["ATTACHMENT"] = { "files": [{"type": "external", "name": filename, "external": {"url": file_url}}] }; logger.info(f"ATTACHMENT añadido: {filename}")
             else: 
@@ -412,13 +411,13 @@ async def confirm_create_endpoint_v4(request: ConfirmCreateRequest):
     return ConfirmCreateResponse(id=mongo_id, notion_record_id=notion_id, notion_url=notion_url, message="Candidato creado con éxito.")
 
 # --- Inicialización de la App ---
-app = FastAPI( title="ATS Babel - CV Processor v6.0", version="6.0.0") # Incremento versión
+app = FastAPI( title="ATS Babel - CV Processor v6.1", version="6.1.0") # Incremento versión
 
 app.add_middleware( CORSMiddleware, allow_origins=CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.include_router(api_router) # <-- Incluir el router SIN prefijo
 
 @app.get("/", include_in_schema=False)
-async def root_v6_0(): return {"message": "ATS API v6.0 running."} # Actualizar versión
+async def root_v6_1(): return {"message": "ATS API v6.1 running."} # Actualizar versión
 
 @app.on_event("startup")
 async def startup_event_v3():
@@ -436,7 +435,7 @@ async def startup_event_v3():
          logger.error("MongoDB no configurado (MONGO_URL/DB_NAME).")
 
 @app.on_event("shutdown")
-async def shutdown_db_client_v6_0(): # Renombrado
+async def shutdown_db_client_v6_1(): # Renombrado
     if mongo_client: mongo_client.close(); logger.info("Conexión MongoDB cerrada.")
 
 # === FIN main.py ===
