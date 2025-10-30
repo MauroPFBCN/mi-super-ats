@@ -318,6 +318,7 @@ async def create_notion_page(candidate_data: CandidateDataInput) -> tuple[str, s
             filename = candidate_data.file_info["filename"]
             logger.info(f"Adjunto: {filename}, Size: {len(file_content)} bytes")
             file_url = await upload_cv_to_external_service(file_content, filename)
+            # --- ¡VALIDACIÓN CORREGIDA! ---
             if file_url and file_url.startswith("http"): 
                 properties["ATTACHMENT"] = { "files": [{"type": "external", "name": filename, "external": {"url": file_url}}] }; logger.info(f"ATTACHMENT añadido: {filename}")
             else: 
