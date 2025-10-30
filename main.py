@@ -1,4 +1,4 @@
-# === INICIO main.py (Versión 6.1 - Re-verificado y Corregido) ===
+# === INICIO main.py (Versión 6.2 - Corregidos 'api_gitor' y 'httpss') ===
 import os
 import logging
 import io
@@ -106,14 +106,11 @@ class ExtractedData(BaseModel):
          if v.lower() in ["freelance", "contractor", "autonomo", "autónomo", "self-employed"]: return "Freelance"
          return v.strip()
 
-    # --- ¡VALIDADOR CORREGIDO! ---
     @validator('email', pre=True)
     def empty_str_to_none_email(cls, v):
         if v == "":
             return None # Convertir "" a None antes de que EmailStr lo valide
         return v
-    # --- FIN ---
-
 
 class CandidateDataInput(BaseModel):
     nombre_apellido: str = Field(..., min_length=1)
@@ -134,14 +131,11 @@ class CandidateDataInput(BaseModel):
     file_info: Optional[Dict[str, Any]] = None
     source_type: str
 
-    # --- ¡VALIDADORES CORREGIDOS! ---
     @validator('email', 'linkedin_url', pre=True)
     def empty_str_to_none(cls, v):
         if v == "":
             return None # Convertir "" a None
         return v
-    # --- FIN ---
-
 
 class ConfirmCreateRequest(BaseModel):
     candidate_data: CandidateDataInput
