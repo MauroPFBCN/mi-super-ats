@@ -7,19 +7,11 @@
     <style>
         /* --- Estilos (iguales que la versión anterior) --- */
         :root {
-            --primary-color: #0052cc; /* Azul Babel */
-            --secondary-color: #f4f5f7; /* Gris claro fondo */
-            --text-color: #172b4d; /* Azul oscuro texto */
-            --border-color: #dfe1e6;
-            --error-color: #de350b;
-            --success-color: #00875a;
-            --warning-color: #ffab00; /* Naranja para warnings */
-            --disabled-color: #a5adba;
-            --white: #ffffff;
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-            --border-radius: 4px;
-            --input-padding: 0.75rem;
-            --spacing: 1rem;
+            --primary-color: #0052cc; --secondary-color: #f4f5f7; --text-color: #172b4d;
+            --border-color: #dfe1e6; --error-color: #de350b; --success-color: #00875a;
+            --warning-color: #ffab00; --disabled-color: #a5adba; --white: #ffffff;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --border-radius: 4px; --input-padding: 0.75rem; --spacing: 1rem;
         }
         body {
             font-family: var(--font-family); background-color: var(--secondary-color); color: var(--text-color);
@@ -90,7 +82,7 @@
                 </div>
                 <div id="linkedin-input-option" class="input-option">
                     <label for="linkedin-url-input">Pegar URL:</label>
-                    <input type="url" id="linkedin-url-input" name="linkedin_url" placeholder="https://linkedin.com/in/nombreusuario">
+                    <input type="url" id="linkedin-url-input" name="linkedin_url" placeholder="[https://linkedin.com/in/nombreusuario](https://linkedin.com/in/nombreusuario)">
                 </div>
             </div>
 
@@ -116,7 +108,7 @@
                 </div>
                 <div class="form-group full-width">
                     <label for="linkedin_url">URL LinkedIn</label>
-                    <input type="url" id="linkedin_url" name="linkedin_url" placeholder="https://linkedin.com/in/anagarcia/">
+                    <input type="url" id="linkedin_url" name="linkedin_url" placeholder="[https://linkedin.com/in/anagarcia/](https://linkedin.com/in/anagarcia/)">
                 </div>
                 <div class="form-group">
                     <label for="current_company">Empresa Actual</label>
@@ -145,8 +137,8 @@
                     <select id="rejection_reason" name="rejection_reason"></select>
                  </div>
                  <div class="form-group">
-                     <label for="source">Source</label>
-                     <select id="source" name="source"></select>
+                    <label for="source">Source</label>
+                    <select id="source" name="source"></select>
                  </div>
                  <div class="form-group">
                      <label for="salary_expectation">Expectativa Salarial</label>
@@ -156,7 +148,7 @@
                     <label for="gender">Gender</label>
                     <select id="gender" name="gender"></select>
                 </div>
-                <div class="form-group full-width">
+                 <div class="form-group full-width">
                      <label for="languages-multiselect">Idiomas</label>
                      <div id="languages-multiselect" class="multiselect-container">
                         <input type="text" class="multiselect-input" placeholder="Buscar o seleccionar idiomas...">
@@ -164,7 +156,7 @@
                         <div class="multiselect-selected-list"></div>
                     </div>
                 </div>
-                <div class="form-group full-width">
+                 <div class="form-group full-width">
                     <label for="short_notes">Notas Cortas</label>
                     <textarea id="short_notes" name="short_notes" placeholder="Añade comentarios relevantes aquí..."></textarea>
                 </div>
@@ -182,10 +174,11 @@
 
 <script>
     // --- CONFIGURACIÓN ---
-    const API_URL = "https://mi-super-ats.onrender.com"; // TU URL DE RENDER VERIFICADA
+    // Quitamos /api/ de todas las llamadas fetch
+    const API_URL = "[https://mi-super-ats.onrender.com](https://mi-super-ats.onrender.com)"; // TU URL DE RENDER VERIFICADA
     // ---------------------
 
-    // Selectores y estado (igual que antes)
+    // Selectores y estado
     const form = document.getElementById('ats-form');
     const analyzeBtn = document.getElementById('analyze-btn');
     const submitBtn = document.getElementById('submit-btn');
@@ -197,7 +190,7 @@
     const linkedinUrlInput = document.getElementById('linkedin-url-input');
     const mainTitle = document.getElementById('main-title');
 
-    const fields = { /* ... (igual que antes) ... */
+    const fields = {
         nombre_apellido: document.getElementById('nombre_apellido'),
         email: document.getElementById('email'),
         phone: document.getElementById('phone'),
@@ -222,21 +215,21 @@
     const langDropdown = langContainer.querySelector('.multiselect-dropdown');
     const langSelectedList = langContainer.querySelector('.multiselect-selected-list');
 
-    // Funciones Auxiliares (igual que antes)
-    function showStatus(message, type = 'loading') { /* ... */
+    // Funciones Auxiliares
+    function showStatus(message, type = 'loading') {
          statusMessage.textContent = message;
          statusMessage.className = `status-message ${type}`;
          statusMessage.style.display = 'block';
     }
-    function hideStatus() { /* ... */ statusMessage.style.display = 'none'; }
-    function setButtonsState(loading = false, analyzed = false) { /* ... */
+    function hideStatus() { statusMessage.style.display = 'none'; }
+    function setButtonsState(loading = false, analyzed = false) {
         analyzeBtn.disabled = loading;
         submitBtn.disabled = loading || !analyzed;
         analyzeBtn.textContent = loading ? 'Analizando...' : '1. Analizar con IA';
         submitBtn.textContent = loading ? 'Enviando...' : '2. Enviar a Notion';
         submitBtn.classList.toggle('button-secondary', submitBtn.disabled);
     }
-    function populateSelect(selectElement, options) { /* ... */
+    function populateSelect(selectElement, options) {
         selectElement.innerHTML = '';
         options.forEach(optionText => {
             const opt = document.createElement('option');
@@ -246,8 +239,8 @@
         });
     }
 
-    // Lógica Multi-select Idiomas (igual que antes)
-    function renderLangDropdown(filter = '') { /* ... */
+    // Lógica Multi-select Idiomas
+    function renderLangDropdown(filter = '') {
          langDropdown.innerHTML = '';
         const filteredLangs = availableLanguages.filter(lang =>
             lang.toLowerCase().includes(filter.toLowerCase()) && !selectedLanguages.includes(lang)
@@ -260,9 +253,16 @@
             optionDiv.addEventListener('click', () => selectLanguage(lang));
             langDropdown.appendChild(optionDiv);
         });
-        langDropdown.classList.toggle('show', filteredLangs.length > 0 || filter.length > 0);
+        langDropdown.classList.toggle('show', filteredLangs.length > 0 || (filter.length > 0 && filteredLangs.length === 0)); // Mostrar "no results" si se escribe
+        if (filter.length > 0 && filteredLangs.length === 0) {
+             const noResult = document.createElement('div');
+             noResult.classList.add('multiselect-option');
+             noResult.textContent = 'No se encontraron idiomas';
+             noResult.style.pointerEvents = 'none'; noResult.style.color = '#999';
+             langDropdown.appendChild(noResult);
+        }
     }
-    function renderSelectedLanguages() { /* ... */
+    function renderSelectedLanguages() {
         langSelectedList.innerHTML = '';
         selectedLanguages.forEach(lang => {
             const itemSpan = document.createElement('span');
@@ -278,38 +278,37 @@
             langSelectedList.appendChild(itemSpan);
         });
     }
-    function selectLanguage(lang) { /* ... */
+    function selectLanguage(lang) {
         if (!selectedLanguages.includes(lang)) {
             selectedLanguages.push(lang); selectedLanguages.sort();
             renderSelectedLanguages(); langInput.value = ''; renderLangDropdown(); langDropdown.classList.remove('show');
             langInput.placeholder = "Buscar o seleccionar idiomas...";
         }
     }
-     function deselectLanguage(lang) { /* ... */
+     function deselectLanguage(lang) {
          selectedLanguages = selectedLanguages.filter(l => l !== lang); renderSelectedLanguages();
          if(langDropdown.classList.contains('show')) { renderLangDropdown(langInput.value); }
      }
     langInput.addEventListener('input', () => renderLangDropdown(langInput.value));
     langInput.addEventListener('focus', () => renderLangDropdown(langInput.value));
-    langInput.addEventListener('keydown', (e) => { /* ... (seleccionar con Enter) ... */
+    langInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
              e.preventDefault();
-             const firstOption = langDropdown.querySelector('.multiselect-option');
+             const firstOption = langDropdown.querySelector('.multiselect-option[data-value]'); // Asegurar que sea una opción real
              if (firstOption) { selectLanguage(firstOption.dataset.value); }
          }
      });
-    document.addEventListener('click', (e) => { /* ... (cerrar al click fuera) ... */ if (!langContainer.contains(e.target)) { langDropdown.classList.remove('show'); } });
+    document.addEventListener('click', (e) => { if (!langContainer.contains(e.target)) { langDropdown.classList.remove('show'); } });
 
-    // Carga Inicial (igual que antes)
+    // Carga Inicial
     async function loadInitialOptions() {
          try {
             showStatus('Cargando opciones...', 'loading');
-            // --- CAMBIO AQUÍ ---
-            const response = await fetch(`${API_URL}/options`); // Sin /api/
-            // ---------------------
+            // --- LLAMADA API CORREGIDA (sin /api/) ---
+            const response = await fetch(`${API_URL}/options`);
             if (!response.ok) {
                  let errorDetail = `Error ${response.status} (${response.statusText}) cargando opciones.`;
-                 try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) { /* Ignorar */}
+                 try { const errorData = await response.json(); errorDetail = errorData.detail || errorDetail; } catch (e) {}
                  throw new Error(errorDetail);
              }
             const options = await response.json();
@@ -329,19 +328,19 @@
         }
     }
 
-    // Manejadores de Eventos (igual que antes)
-    sourceOptions.forEach(radio => { /* ... (cambio CV/LinkedIn) ... */
+    // Manejadores de Eventos
+    sourceOptions.forEach(radio => {
         radio.addEventListener('change', (e) => {
             currentSourceType = e.target.value;
             cvInputOption.classList.toggle('active', currentSourceType === 'cv');
             linkedinInputOption.classList.toggle('active', currentSourceType === 'linkedin');
             if (currentSourceType === 'cv') linkedinUrlInput.value = ''; else cvFileInput.value = '';
             currentFileInfo = null;
-            Object.values(fields).forEach(field => {
-                 if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') field.value = '';
-                 else if (field.tagName === 'SELECT') field.selectedIndex = 0;
-            });
-            selectedLanguages = []; renderSelectedLanguages();
+            // Limpiar campos extraídos al cambiar fuente
+            fields.nombre_apellido.value = ''; fields.email.value = ''; fields.phone.value = '';
+            fields.location.value = ''; fields.linkedin_url.value = ''; fields.current_company.value = '';
+            fields.skills.value = '';
+            selectedLanguages = []; renderSelectedLanguages(); // Limpiar idiomas
             setButtonsState(false, false);
             hideStatus();
         });
@@ -364,9 +363,8 @@
 
         try {
             showStatus('Analizando con IA...', 'loading');
-             // --- CAMBIO AQUÍ ---
+            // --- LLAMADA API CORREGIDA (sin /api/) ---
             const response = await fetch(`${API_URL}/process`, { method: 'POST', body: body });
-             // ---------------------
             const data = await response.json();
             if (!response.ok) { throw new Error(data.detail || `Error del servidor: ${response.status}`); }
 
@@ -378,9 +376,18 @@
             fields.linkedin_url.value = extracted.linkedin_url || '';
             fields.current_company.value = extracted.current_company || '';
             fields.skills.value = (extracted.skills || []).join(', ');
-            fields.gender.value = extracted.gender || '';
+            // NO sobrescribir el dropdown de género si el usuario ya seleccionó uno
+            if (fields.gender.value === "") {
+                 fields.gender.value = extracted.gender || '';
+            }
 
-            selectedLanguages = extracted.languages || [];
+            // Preseleccionar idiomas (añadir, no reemplazar los ya seleccionados por el usuario)
+            const newLangs = extracted.languages || [];
+            newLangs.forEach(lang => {
+                 if (availableLanguages.includes(lang) && !selectedLanguages.includes(lang)) {
+                     selectedLanguages.push(lang);
+                 }
+            });
             selectedLanguages.sort();
             renderSelectedLanguages();
 
@@ -394,7 +401,7 @@
                 message = `EMAIL DUPLICADO (${fields.email.value}). Revisa/envía igualmente.`;
             }
             showStatus(message, statusType);
-            setButtonsState(false, true);
+            setButtonsState(false, true); // Habilitar submit
 
         } catch (error) {
             showStatus(`Error análisis: ${error.message}`, 'error');
@@ -407,8 +414,8 @@
         if (!fields.nombre_apellido.value.trim()) { showStatus('Nombre y Apellido obligatorio.', 'error'); fields.nombre_apellido.focus(); return; }
         hideStatus(); setButtonsState(true, true);
 
-        const candidatePayload = { /* ... (igual que antes) ... */
-             nombre_apellido: fields.nombre_apellido.value.trim(),
+        const candidatePayload = {
+            nombre_apellido: fields.nombre_apellido.value.trim(),
             email: fields.email.value.trim() || null,
             phone: fields.phone.value.trim(),
             location: fields.location.value.trim(),
@@ -430,9 +437,8 @@
         const callConfirmCreate = async (force = false) => {
              try {
                  showStatus('Enviando a Notion...', 'loading');
-                  // --- CAMBIO AQUÍ ---
-                 const response = await fetch(`${API_URL}/candidates/confirm-create`, { // Sin /api/
-                 // ---------------------
+                 // --- LLAMADA API CORREGIDA (sin /api/) ---
+                 const response = await fetch(`${API_URL}/candidates/confirm-create`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ candidate_data: candidatePayload, force_create_duplicate: force })
                 });
@@ -451,12 +457,16 @@
                      fields.salary_expectation.value = ''; fields.short_notes.value = '';
                      cvFileInput.value = ''; linkedinUrlInput.value = ''; currentFileInfo = null;
                      selectedLanguages = []; renderSelectedLanguages();
-                     setButtonsState(false, false);
+                     // Resetear dropdowns
+                     fields.stage.selectedIndex = 0; fields.resolution.selectedIndex = 0; fields.rejection_reason.selectedIndex = 0;
+                     fields.source.selectedIndex = 0; fields.gender.selectedIndex = 0;
+                     
+                     setButtonsState(false, false); // Resetear botones
                 }
             } catch (error) {
                 showStatus(`Error envío Notion: ${error.message}`, 'error');
                 console.error("Error detallado envío:", error);
-                setButtonsState(false, true);
+                setButtonsState(false, true); // Permitir reintento
             }
         };
         await callConfirmCreate(false); // Llamada inicial
