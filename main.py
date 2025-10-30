@@ -1,4 +1,4 @@
-# === INICIO main.py (Versión 5.3 - Conexión MongoDB en Startup) ===
+# === INICIO main.py (Versión 5.4 - Corregido 'is not None') ===
 import os
 import logging
 import io
@@ -9,7 +9,7 @@ import base64
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 
-from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Body, Form # Asegurar que Form está aquí
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Body, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, EmailStr, HttpUrl, validator
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # --- Carga de Secretos (Variables de Entorno) ---
-MONGO_URL = os.environ.get('MONGO_URL') # No poner default aquí, chequear en startup
+MONGO_URL = os.environ.get('MONGO_URL')
 DB_NAME = os.environ.get('DB_NAME')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 NOTION_API_TOKEN = os.environ.get('NOTION_API_TOKEN')
@@ -35,9 +35,9 @@ if not all([MONGO_URL, DB_NAME, OPENAI_API_KEY, NOTION_API_TOKEN, NOTION_DATABAS
     logger.warning("¡Advertencia! Variables críticas (Mongo, OpenAI, Notion) pueden faltar.")
 
 # --- Clientes (Modificado para inicializar en startup) ---
-mongo_client: Optional[AsyncIOMotorClient] = None # Tipado opcional
+mongo_client: Optional[AsyncIOMotorClient] = None
 db = None
-logger.info("Clientes MongoDB y OpenAI se inicializarán más tarde.")
+logger.info("Clientes MongoDB y OpenAI se inicializarán en el evento startup.")
 
 openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 if not openai_client:
@@ -54,7 +54,6 @@ NOTION_OPTIONS = {
 }
 
 # --- Modelos Pydantic ---
-# (Las definiciones de ExtractedData, CandidateDataInput, etc. son las mismas que antes)
 class ExtractedData(BaseModel):
     nombre_apellido: Optional[str] = Field(default="", description="Nombre completo sin títulos")
     email: Optional[EmailStr] = Field(default=None)
@@ -136,12 +135,7 @@ class DuplicateCheckResponse(BaseModel):
     candidate_id: Optional[str] = None
     notion_url: Optional[HttpUrl] = None
 
-
 # --- Funciones de Extracción y Auxiliares ---
-# (extract_text, extract_linkedin_from_text_robust, extract_data_with_ai,
-#  check_email_duplicate, upload_cv_to_external_service, create_notion_page
-#  permanecen exactamente iguales que en la versión anterior)
-
 async def extract_text(file_content: bytes, filename: str) -> str:
     text = ""
     try:
@@ -153,13 +147,12 @@ async def extract_text(file_content: bytes, filename: str) -> str:
         elif filename.lower().endswith(('.docx')):
             doc = Document(io.BytesIO(file_content))
             text = "\n".join(para.text for para in doc.paragraphs if para.text)
-        elif filename.lower().endswith('.doc'): # Basic .doc handling attempt
-             logger.warning(".doc file detected, attempting basic text extraction (may fail or be incomplete).")
-             # Try reading as plain text with error ignoring
+        elif filename.lower().endswith('.doc'):
+             logger.warning(".doc file detected, attempting basic text extraction.")
              try: text = file_content.decode('utf-8', errors='ignore')
-             except: text = file_content.decode('latin-1', errors='ignore') # Try another common encoding
+             except: text = file_content.decode('latin-1', errors='ignore')
         else:
-             logger.warning(f"Formato no soportado oficialmente: {filename}. Intentando leer como texto.")
+             logger.warning(f"Formato no soportado: {filename}. Intentando leer como texto.")
              try: text = file_content.decode('utf-8', errors='ignore')
              except: text = ""
         logger.info(f"Texto extraído de {filename} ({len(text)} chars)")
@@ -168,7 +161,7 @@ async def extract_text(file_content: bytes, filename: str) -> str:
         logger.error(f"Error leyendo PDF {filename}: {pdf_err}")
         raise HTTPException(status_code=400, detail=f"PDF corrupto/protegido: {pdf_err}")
     except Exception as e:
-        logger.exception(f"Error extrayendo texto de {filename}")
+        logger.exception(f"Error inesperado extrayendo texto de {filename}")
         raise HTTPException(status_code=500, detail=f"Error interno extrayendo texto: {e}")
 
 async def extract_linkedin_from_text_robust(text_content: str) -> str:
@@ -210,9 +203,9 @@ async def extract_data_with_ai(text_content: str) -> ExtractedData:
     - email: Email principal.
     - phone: Teléfono principal limpio (+[prefijo][número] si es posible, si no solo dígitos).
     - location: Ciudad y País ("Ciudad, País").
-    - linkedin_url: URL COMPLETA (https://linkedin.com/in/...). Busca links INCUSTADOS. Prioriza URL pre-detectada si válida. Limpia params (?trk=...).
+    - linkedin_url: URL COMPLETA (https://linkedin.com/in/...). Busca links INCUSTADOS en texto (ej. la palabra 'LinkedIn'). Prioriza la URL pre-detectada si es válida, pero busca en el texto por si hay una mejor. Limpia params (?trk=...).
     - current_company: Empresa más reciente ("Presente", "Actual"). Si autónomo -> "Freelance". Solo nombre empresa.
-    - skills: Lista MAX 8 skills/roles clave (["Java", "React", "AWS", "Project Management"]). Generaliza puestos.
+    - skills: Lista MAX 8 skills/roles clave (["Java", "React", "AWS", "Project Management", "SQL"]). Generaliza puestos.
     - languages: Lista MAX 5 idiomas con nivel MCER si posible (["Spanish C2 Native", "English B2"]).
     - gender: Infiere "Male" o "Female" del nombre. Si ambiguo -> "".
     URL PRE-DETECTADA: {linkedin_url_direct or "Ninguna"}
@@ -229,7 +222,7 @@ async def extract_data_with_ai(text_content: str) -> ExtractedData:
         except json.JSONDecodeError as json_err:
              logger.error(f"IA devolvió JSON inválido: {json_err}. Respuesta: {json_response}")
              raise HTTPException(status_code=500, detail="Respuesta IA inválida (JSON).") from json_err
-        extracted = ExtractedData(**data) # Validar/Limpiar con Pydantic
+        extracted = ExtractedData(**data)
         if not extracted.linkedin_url and linkedin_url_direct:
             validated_direct_url = ExtractedData(linkedin_url=linkedin_url_direct).linkedin_url
             if validated_direct_url: extracted.linkedin_url = validated_direct_url; logger.info("Usando URL LinkedIn pre-detectada.")
@@ -252,7 +245,10 @@ async def extract_data_with_ai(text_content: str) -> ExtractedData:
 
 async def check_email_duplicate(email: Optional[EmailStr]) -> DuplicateCheckResponse:
     if not email: return DuplicateCheckResponse(exists=False)
-    if not db: logger.warning("Check duplicado: Conexión DB no disponible."); return DuplicateCheckResponse(exists=False)
+    # --- ¡CAMBIO CLAVE 1! ---
+    if db is None:
+        logger.warning("Check duplicado: Conexión DB no disponible.")
+        return DuplicateCheckResponse(exists=False)
     try:
         email_str = str(email).strip().lower()
         existing = await db.candidates.find_one({"email": email_str}, {"_id": 1, "notion_url": 1})
@@ -270,7 +266,6 @@ async def upload_cv_to_external_service(file_content: bytes, filename: str) -> s
         headers = {'User-Agent': 'ATS Uploader/1.0'}
         files = {'file': (filename, file_content)}
         async with httpx.AsyncClient(timeout=60.0) as client:
-            # Usar file.io con expiración corta (ej. 1 día)
             response = await client.post('[https://file.io?expires=1d](https://file.io?expires=1d)', files=files, headers=headers)
             if response.status_code == 200:
                 data = response.json(); file_url = data.get('link')
@@ -324,7 +319,7 @@ async def create_notion_page(candidate_data: CandidateDataInput) -> tuple[str, s
     except Exception as e: logger.exception("Error inesperado creando Notion"); raise HTTPException(status_code=500, detail=f"Error interno Notion: {e}")
 
 # --- API Endpoints ---
-api_router = APIRouter()
+api_router = APIRouter(prefix="/api")
 
 @api_router.get("/options", response_model=Dict[str, List[str]])
 async def get_notion_options_endpoint_v3():
@@ -332,7 +327,7 @@ async def get_notion_options_endpoint_v3():
     selects = ["STAGE", "RESOLUTION", "REJECTION_REASON", "SOURCE", "GENDER"]
     for key, values in NOTION_OPTIONS.items():
         if key in selects: options[key] = [""] + values
-        else: options[key] = values # LANGUAJE ya está ordenado
+        else: options[key] = values
     return options
 
 @api_router.post("/process", response_model=Dict)
@@ -357,7 +352,10 @@ async def process_source_endpoint_v3(file: Optional[UploadFile] = File(None), li
         if source_type == "linkedin" and not extracted_data.linkedin_url:
              validated_original_url = ExtractedData(linkedin_url=str(linkedin_url)).linkedin_url
              if validated_original_url: extracted_data.linkedin_url = validated_original_url
+        
+        # Esta es la línea que falla:
         duplicate_info = await check_email_duplicate(extracted_data.email)
+        
         extracted_dict = extracted_data.dict()
         if extracted_dict.get("linkedin_url"): extracted_dict["linkedin_url"] = str(extracted_dict["linkedin_url"])
         duplicate_dict = duplicate_info.dict()
@@ -378,47 +376,49 @@ async def confirm_create_endpoint_v4(request: ConfirmCreateRequest):
     try:
         notion_id, notion_url_str = await create_notion_page(candidate_input)
         try: notion_url = HttpUrl(notion_url_str, scheme="https")
-        except Exception: notion_url = HttpUrl("[https://www.notion.so](https://www.notion.so)", scheme="https") # Fallback
+        except Exception: notion_url = HttpUrl("[https://www.notion.so](https://www.notion.so)", scheme="https")
     except HTTPException as e: raise e
     except Exception as e: logger.exception("Error llamando a create_notion_page"); raise HTTPException(status_code=500, detail=f"Error interno Notion: {e}")
     mongo_id = str(uuid.uuid4())
     candidate_doc = {"_id": mongo_id, "notion_record_id": notion_id, "notion_url": str(notion_url), "created_at": datetime.now(timezone.utc), **candidate_input.dict(exclude={'file_info'})}
     if candidate_doc.get("email"): candidate_doc["email"] = str(candidate_doc["email"]).lower()
     if candidate_doc.get("linkedin_url"): candidate_doc["linkedin_url"] = str(candidate_doc["linkedin_url"])
-    if db: # Guardar solo si DB está conectada
+    
+    # --- ¡CAMBIO CLAVE 3! ---
+    if db is not None:
         try: await db.candidates.insert_one(candidate_doc) ; logger.info(f"Guardado MongoDB: {mongo_id}")
         except Exception as e: logger.error(f"Error guardando MongoDB (NotionID: {notion_id}): {e}")
-    else: logger.warning("No guardado MongoDB, conexión no disponible.")
+    else:
+        logger.warning("No guardado MongoDB, conexión no disponible.")
     return ConfirmCreateResponse(id=mongo_id, notion_record_id=notion_id, notion_url=notion_url, message="Candidato creado con éxito.")
 
 # --- Inicialización de la App ---
-app = FastAPI( title="ATS Babel - CV Processor v5.3", version="5.3.0") # Incremento versión
+app = FastAPI( title="ATS Babel - CV Processor v5.4", version="5.4.0") # Incremento versión
 
 app.add_middleware( CORSMiddleware, allow_origins=CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.include_router(api_router)
 
 @app.get("/", include_in_schema=False)
-async def root_v5_3(): return {"message": "ATS API v5.3 running."} # Actualizar versión
+async def root_v5_4(): return {"message": "ATS API v5.4 running."}
 
 @app.on_event("startup")
-async def startup_event_v2(): # Renombrado
+async def startup_event_v3(): # Renombrado
     global mongo_client, db
     logger.info("Startup: Intentando conectar MongoDB...")
     if MONGO_URL and DB_NAME:
         try:
-            # Añadir timeout a la conexión inicial también
             mongo_client = AsyncIOMotorClient(MONGO_URL, serverSelectionTimeoutMS=5000)
-            await mongo_client.admin.command('ping') # Verificar conexión
+            await mongo_client.admin.command('ping')
             db = mongo_client.get_database(DB_NAME)
             logger.info("MongoDB conectado y verificado en startup.")
         except Exception as e:
-            logger.error(f"MongoDB falló conexión/ping en startup: {e}. Funciones DB no disponibles.")
+            logger.error(f"Ping a MongoDB falló en startup: {e}. Funciones DB no disponibles.")
             # db permanece None
     else:
          logger.error("MongoDB no configurado (MONGO_URL/DB_NAME).")
 
 @app.on_event("shutdown")
-async def shutdown_db_client_v5_3(): # Renombrado
+async def shutdown_db_client_v5_4(): # Renombrado
     if mongo_client: mongo_client.close(); logger.info("Conexión MongoDB cerrada.")
 
 # === FIN main.py ===
